@@ -50,8 +50,7 @@ export const createCategory = async (req, res) => {
 
       userAgent: req.get("user-agent"),
     });
-    //   setFlash(req, "success", "Category created successfully");
-    //  return res.redirect("/admin/category");
+   
     return successResponse(res, {
       statusCode: 201,
       message: "Category created successfullyss",

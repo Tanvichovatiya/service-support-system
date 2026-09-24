@@ -18,7 +18,7 @@ const notificationServices = {
       );
 
       await redisServices.set(redisKey, unreadCount);
-      //  console.log(unreadCount,redisKey)
+      
       return {
         notification,
         unreadCount,

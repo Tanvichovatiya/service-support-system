@@ -8,6 +8,7 @@ import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
 
 const ChatLayout = ({ contactType }) => {
+  
   const { staff, users } = useSelector((state) => state.user);
   const { selectedContact } = useSelector((state) => state.chat);
 

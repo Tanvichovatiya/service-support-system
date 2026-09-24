@@ -10,12 +10,12 @@ import errorMiddleware from './middleware/error.middleware.js';
 import env from './config/env.js';
 import { connectRedis } from './config/redis.js';
 import adminIndexRoutes from './routes/adminRoutes/adminIndexRoutes.js';
-import { seedAdmin } from './utils/seedAdmin.js';
+
 import http from "http"
 import { initSocket } from './socket/initSocket.js';
 import apiRateLimit from './middleware/apiRateLimit.js';
 import { startJobs } from './jobs/index.js';
-import seedUsersAndStaff from './utils/seendUsersStaff.js';
+
 
 
 

@@ -15,7 +15,7 @@ msgRoutes.post(
   uploadMessageFile.single("file"),
   sendMessage
 );
-msgRoutes.get("/loadmsg/:receiverId",authMiddleware,authorize("user","staff"),loadMessage)
+msgRoutes.get("/conversation/:receiverId",authMiddleware,authorize("user","staff"),loadMessage)
 
 msgRoutes.get("/getunreadmsg",authMiddleware,authorize("user","staff"),getUnReadMsg)
 

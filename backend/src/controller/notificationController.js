@@ -84,7 +84,7 @@ export const getUnreadNotifications = async (req, res) => {
         $limit: limitNumber,
       },
     ]);
-    // console.log("unreadnotfications:", notifications);
+    // console.log("unreadnotfications list:", notifications);
 
     const total = await notificationServices.countUnread(userId);
 
@@ -125,6 +125,7 @@ export const getUnreadNotificationCount = async (req, res) => {
 
       await redisServices.set(redisKey, unreadCount);
     }
+    // console.log("unreadCount:",unreadCount)
     // let unreadCount = await notificationServices.countUnread(userId);
     return successResponse(res, {
       statusCode: 200,

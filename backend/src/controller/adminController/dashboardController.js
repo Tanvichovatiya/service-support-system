@@ -438,6 +438,9 @@ export const getDashboard = async (req, res) => {
       averageCompletionTime,
     };
 
+
+
+    // console.log("dashboard:",dashboard)
     await redisServices.setJson(
       cacheKey,
       {
@@ -449,7 +452,7 @@ export const getDashboard = async (req, res) => {
       },
     );
 
-    console.log("Dashboard Cache SET");
+    console.log("Dashboard Cache set");
 
     return res.render("admin/dashboard", {
       totalUsers,

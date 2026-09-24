@@ -19,7 +19,7 @@ const processPendingOverdueRequest = async () => {
 
     const admin = await userServices.getdatabyfindOne(
       { role: "admin", isActive: true },
-      "_id firstname lastname",
+      "_id ",
     );
 
 

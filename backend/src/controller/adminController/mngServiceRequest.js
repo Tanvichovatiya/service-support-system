@@ -996,7 +996,6 @@ export const getRequestComments = async (req, res) => {
     });
   }
 };
-
 export const updateRequestStatus = async (req, res) => {
   try {
     const { reqid } = req.params;
@@ -1005,18 +1004,17 @@ export const updateRequestStatus = async (req, res) => {
     const userId = req.user.id;
     const role = req.user.role;
 
-    const serviceRequest = await ServiceRequestServices.getdatabyfindOne({
-      _id: reqid,
-    });
+    const serviceRequest =
+      await ServiceRequestServices.getdatabyfindOne({
+        _id: reqid,
+      });
 
-  
+   
+
     const currentStatus = serviceRequest.status;
 
-
     const allowedTransitions = {
-    
       staff: {
-        assigned: ["in_progress"],
         in_progress: ["completed"],
       },
 
@@ -1037,8 +1035,9 @@ export const updateRequestStatus = async (req, res) => {
       });
     }
 
-
-    const updateData = {status,};
+    const updateData = {
+      status,
+    };
 
     if (status === "assigned") {
       updateData.assignedAt = new Date();
@@ -1059,10 +1058,8 @@ export const updateRequestStatus = async (req, res) => {
       },
       {
         $set: updateData,
-      },
+      }
     );
-
-  
 
     await auditLogServices.create({
       userId,
@@ -1082,16 +1079,12 @@ export const updateRequestStatus = async (req, res) => {
       userAgent: req.get("user-agent"),
     });
 
- 
-
     const io = getIo();
-
 
     const admin = await userServices.getdatabyfindOne({
       role: "admin",
       isActive: true,
     });
-
 
     if (role !== "user") {
       const userNotification =
@@ -1100,7 +1093,6 @@ export const updateRequestStatus = async (req, res) => {
           senderId: userId,
           requestId: serviceRequest._id,
           type: "status_changed",
-
           message: `Your service request "${serviceRequest.title}" status changed to "${status}".`,
         });
 
@@ -1111,11 +1103,9 @@ export const updateRequestStatus = async (req, res) => {
           status,
           notification: userNotification.notification,
           unreadCount: userNotification.unreadCount,
-        },
+        }
       );
     }
-
-  
 
     if (role !== "staff" && serviceRequest.assignedStaffId) {
       const staff = await staffServices.getdatabyfindOne({
@@ -1129,7 +1119,6 @@ export const updateRequestStatus = async (req, res) => {
             senderId: userId,
             requestId: serviceRequest._id,
             type: "status_changed",
-
             message: `Service request "${serviceRequest.title}" status changed to "${status}".`,
           });
 
@@ -1140,12 +1129,11 @@ export const updateRequestStatus = async (req, res) => {
             status,
             notification: staffNotification.notification,
             unreadCount: staffNotification.unreadCount,
-          },
+          }
         );
       }
     }
 
-  
     if (role !== "admin" && admin) {
       const adminNotification =
         await notificationServices.createNotification({
@@ -1153,7 +1141,6 @@ export const updateRequestStatus = async (req, res) => {
           senderId: userId,
           requestId: serviceRequest._id,
           type: "status_changed",
-
           message: `Service request "${serviceRequest.title}" status changed to "${status}".`,
         });
 
@@ -1164,12 +1151,11 @@ export const updateRequestStatus = async (req, res) => {
           status,
           notification: adminNotification.notification,
           unreadCount: adminNotification.unreadCount,
-        },
+        }
       );
     }
-    
-    await redisServices.delete(redisKeys.dashboard.stats())
-    
+
+    await redisServices.delete(redisKeys.dashboard.stats());
 
     return successResponse(res, {
       statusCode: 200,

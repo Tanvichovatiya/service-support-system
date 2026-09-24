@@ -26,7 +26,7 @@ export const getMyrequestUser = async() =>{
 export const loadMessages = async (receiverId) => {
   try {
     const res = await api.get(
-      `/message/loadmsg/${receiverId}`
+      `/message/conversation/${receiverId}`
     );
 
     return res.data.data;

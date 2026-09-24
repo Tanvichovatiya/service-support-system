@@ -717,10 +717,7 @@ export const getAllReqofStaff = async (req, res) => {
 
     const result = await ServiceRequestServices.getAggData(pipeline);
 
-    console.log("Staff ID:", staff._id);
-    console.log("Pipeline match:", match);
-    console.log("Result:", result);
-
+  
     const requests = result[0]?.data || [];
 
     const totalRequest = result[0]?.total[0]?.count || 0;
@@ -1002,6 +999,8 @@ export const acceptAssignedRequest = async (req, res) => {
         },
       },
     );
+
+    
 
     await auditLogServices.create({
       userId,

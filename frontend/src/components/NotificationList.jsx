@@ -102,7 +102,7 @@ const NotificationList = ({
   return (
     <section className="min-h-[calc(100vh-72px)] bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-5xl">
-        {/* Header */}
+       
         <div className="mb-6 flex flex-col gap-4 rounded-admin-lg border border-border bg-surface p-5 shadow-admin-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand">
@@ -129,13 +129,13 @@ const NotificationList = ({
             </div>
           </div>
 
-          {/* Mark All as Read */}
+          
           {unreadCount > 0 && (
             <button
               type="button"
               onClick={handleMarkAllRead}
               disabled={markingAll}
-              className="inline-flex w-fit items-center gap-2 rounded-admin border border-brand bg-brand px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-fit items-center gap-2 rounded-admin border border-brand bg-brand px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
             >
               <FiCheck size={16} />
 
