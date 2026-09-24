@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+
+    <title>Admin Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/output.css"
+    />
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css"
+        integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+    />
+
+    <%- include('../partials/toast') %>
+
+   
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+
+<body class="bg-background font-admin text-text-primary antialiased">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <%- include('../partials/sidebar') %>
+
+
+        <main class="flex min-w-0 flex-1 flex-col overflow-hidden">
+
+
+            <header class="shrink-0 border-b border-border bg-surface">
+
+                <div
+                    class="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between md:px-8"
+                >
+
+                    <div>
+
+                        <p class="text-sm font-medium text-brand">
+                            Admin Overview
+                        </p>
+
+                        <h1
+                            class="mt-1 text-2xl font-bold tracking-tight text-heading"
+                        >
+                            Dashboard
+                        </h1>
+
+                        <p class="mt-1 text-sm text-text-secondary">
+                            Monitor service requests, staff activity and system performance.
+                        </p>
+
+                    </div>
+
+
+                    <div
+                        class="inline-flex w-fit items-center gap-2 rounded-admin border border-border bg-background px-4 py-2.5 text-sm font-medium text-text-secondary"
+                    >
+
+                        <i class="fa-regular fa-calendar text-brand"></i>
+
+                        <span id="currentDate">
+                            --
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <section
+                class="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 md:px-8"
+            >
+
+                <div class="mx-auto w-full max-w-[1800px] space-y-6">
+
+
+
+                    <div
+                        class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+                    >
+
+                        <div
+                            class="rounded-admin-lg border-[1.4px] border-sidebar-start bg-surface p-5 shadow-admin-sm transition hover:shadow-admin-hover"
+                        >
+
+                            <div class="flex items-start justify-between">
+
+                                <div class="min-w-0">
+
+                                    <p
+                                        class="text-sm font-medium text-text-secondary"
+                                    >
+                                        Total Users
+                                    </p>
+
+                                    <h2
+                                        class="mt-2 text-3xl font-bold text-heading"
+                                    >
+                                        <%= totalUsers || 0 %>
+                                    </h2>
+
+                                    <p
+                                        class="mt-1 text-xs text-text-muted"
+                                    >
+                                        Registered users
+                                    </p>
+
+                                </div>
+
+                                <div
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand"
+                                >
+                                    <i class="fa-solid fa-users"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="rounded-admin-lg border-[1.4px] border-sidebar-start bg-surface p-5 shadow-admin-sm transition hover:shadow-admin-hover"
+                        >
+
+                            <div class="flex items-start justify-between">
+
+                                <div class="min-w-0">
+
+                                    <p
+                                        class="text-sm font-medium text-text-secondary"
+                                    >
+                                        Total Requests
+                                    </p>
+
+                                    <h2
+                                        class="mt-2 text-3xl font-bold text-heading"
+                                    >
+                                        <%= dashboard.summary.totalRequests || 0 %>
+                                    </h2>
+
+                                    <p
+                                        class="mt-1 text-xs text-text-muted"
+                                    >
+                                        All service requests
+                                    </p>
+
+                                </div>
+
+                                <div
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-admin bg-info-light text-info"
+                                >
+                                    <i class="fa-solid fa-clipboard-list"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="rounded-admin-lg border-[1.4px] border-sidebar-start bg-surface p-5 shadow-admin-sm transition hover:shadow-admin-hover"
+                        >
+
+                            <div class="flex items-start justify-between">
+
+                                <div class="min-w-0">
+
+                                    <p
+                                        class="text-sm font-medium text-text-secondary"
+                                    >
+                                        Today's Requests
+                                    </p>
+
+                                    <h2
+                                        class="mt-2 text-3xl font-bold text-brand"
+                                    >
+                                        <%= dashboard.summary.todayRequests || 0 %>
+                                    </h2>
+
+                                    <p
+                                        class="mt-1 text-xs text-text-muted"
+                                    >
+                                        Created today
+                                    </p>
+
+                                </div>
+
+                                <div
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand"
+                                >
+                                    <i class="fa-solid fa-calendar-day"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div
+                            class="rounded-admin-lg border-[1.4px] border-sidebar-start bg-surface p-5 shadow-admin-sm transition hover:shadow-admin-hover"
+                        >
+
+                            <div class="flex items-start justify-between">
+
+                                <div class="min-w-0">
+
+                                    <p
+                                        class="text-sm font-medium text-text-secondary"
+                                    >
+                                        Pending Requests
+                                    </p>
+
+                                    <h2
+                                        class="mt-2 text-3xl font-bold text-warning"
+                                    >
+                                        <%= dashboard.summary.pending || 0 %>
+                                    </h2>
+
+                                    <p
+                                        class="mt-1 text-xs text-text-muted"
+                                    >
+                                        Waiting for assignment
+                                    </p>
+
+                                </div>
+
+                                <div
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-admin bg-warning-light text-warning"
+                                >
+                                    <i class="fa-solid fa-clock"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="rounded-admin-lg border-[1.4px] border-sidebar-start bg-surface p-5 shadow-admin-sm transition hover:shadow-admin-hover"
+                        >
+
+                            <div class="flex items-start justify-between">
+
+                                <div>
+
+                                    <p
+                                        class="text-sm font-medium text-text-secondary"
+                                    >
+                                        Assigned
+                                    </p>
+
+                                    <h2
+                                        class="mt-2 text-3xl font-bold text-info"
+                                    >
+                                        <%= dashboard.summary.assigned || 0 %>
+                                    </h2>
+
+                                    <p
+                                        class="mt-1 text-xs text-text-muted"
+                                    >
+                                        Assigned to staff
+                                    </p>
+
+                                </div>
+
+                                <div
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-admin bg-info-light text-info"
+                                >
+                                    <i class="fa-solid fa-user-check"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="rounded-admin-lg border-[1.4px] border-sidebar-start bg-surface p-5 shadow-admin-sm transition hover:shadow-admin-hover"
+                        >
+
+                            <div class="flex items-start justify-between">
+
+                                <div>
+
+                                    <p
+                                        class="text-sm font-medium text-text-secondary"
+                                    >
+                                        In Progress
+                                    </p>
+
+                                    <h2
+                                        class="mt-2 text-3xl font-bold text-brand"
+                                    >
+                                        <%= dashboard.summary.inProgress || 0 %>
+                                    </h2>
+
+                                    <p
+                                        class="mt-1 text-xs text-text-muted"
+                                    >
+                                        Currently being handled
+                                    </p>
+
+                                </div>
+
+                                <div
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand"
+                                >
+                                    <i class="fa-solid fa-spinner"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="rounded-admin-lg border-[1.4px] border-sidebar-start bg-surface p-5 shadow-admin-sm transition hover:shadow-admin-hover"
+                        >
+
+                            <div class="flex items-start justify-between">
+
+                                <div>
+
+                                    <p
+                                        class="text-sm font-medium text-text-secondary"
+                                    >
+                                        Completed
+                                    </p>
+
+                                    <h2
+                                        class="mt-2 text-3xl font-bold text-success"
+                                    >
+                                        <%= dashboard.summary.completed || 0 %>
+                                    </h2>
+
+                                    <p
+                                        class="mt-1 text-xs text-text-muted"
+                                    >
+                                        Successfully completed
+                                    </p>
+
+                                </div>
+
+                                <div
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-admin bg-success-light text-success"
+                                >
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div
+                            class="rounded-admin-lg border-[1.4px] border-sidebar-start bg-surface p-5 shadow-admin-sm transition hover:shadow-admin-hover"
+                        >
+
+                            <div class="flex items-start justify-between">
+
+                                <div>
+
+                                    <p
+                                        class="text-sm font-medium text-text-secondary"
+                                    >
+                                        Avg. Completion
+                                    </p>
+
+                                    <h2
+                                        id="averageCompletionTime"
+                                        class="mt-2 text-3xl font-bold text-heading"
+                                    >
+                                        0h
+                                    </h2>
+
+                                    <p
+                                        class="mt-1 text-xs text-text-muted"
+                                    >
+                                        Average request duration
+                                    </p>
+
+                                </div>
+
+                                <div
+                                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand"
+                                >
+                                    <i class="fa-solid fa-stopwatch"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                
+
+                    <div
+                        class="flex min-h-0 flex-1 flex-col rounded-admin-xl border border-border bg-surface p-5  shadow-admin"
+                    >
+
+                        <div
+                            class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                        >
+
+                            <div>
+
+                                <h2
+                                    class="text-lg font-semibold text-heading"
+                                >
+                                    Request Trends
+                                </h2>
+
+                                <p
+                                    class="mt-1 text-sm text-text-secondary"
+                                >
+                                    Monthly request activity and completion progress
+                                </p>
+
+                            </div>
+
+                            <div
+                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand"
+                            >
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="relative min-h-[320px] flex-1"
+                        >
+
+                            <canvas
+                                id="monthlyChart"
+                            ></canvas>
+
+                            <div
+                                id="monthlyEmpty"
+                                class="absolute inset-0 hidden items-center justify-center"
+                            >
+
+                                <div class="text-center">
+
+                                    <div
+                                        class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand"
+                                    >
+                                        <i
+                                            class="fa-solid fa-chart-line text-xl"
+                                        ></i>
+                                    </div>
+
+                                    <p
+                                        class="mt-3 text-sm font-semibold text-heading"
+                                    >
+                                        No monthly data
+                                    </p>
+
+                                    <p
+                                        class="mt-1 text-xs text-text-muted"
+                                    >
+                                        Request statistics will appear here.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="flex min-h-0 flex-1 flex-col rounded-admin-xl border border-border bg-surface p-5 shadow-admin"
+                    >
+
+                        <div
+                            class="mb-5 flex items-center justify-between gap-4"
+                        >
+
+                            <div>
+
+                                <h2
+                                    class="text-lg font-semibold text-heading"
+                                >
+                                    Request Status
+                                </h2>
+
+                                <p
+                                    class="mt-1 text-sm text-text-secondary"
+                                >
+                                    Current request status distribution
+                                </p>
+
+                            </div>
+
+                            <div
+                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand"
+                            >
+                                <i class="fa-solid fa-chart-pie"></i>
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="relative min-h-[340px] flex-1"
+                        >
+
+                            <canvas
+                                id="statusChart"
+                            ></canvas>
+
+                            <div
+                                id="statusEmpty"
+                                class="absolute inset-0 hidden items-center justify-center"
+                            >
+
+                                <div class="text-center">
+
+                                    <div
+                                        class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand"
+                                    >
+                                        <i
+                                            class="fa-solid fa-chart-pie text-xl"
+                                        ></i>
+                                    </div>
+
+                                    <p
+                                        class="mt-3 text-sm font-semibold text-heading"
+                                    >
+                                        No status data
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div
+                        class="flex min-h-0 flex-1 flex-col rounded-admin-xl border border-border bg-surface p-5 shadow-admin"
+                    >
+
+                        <div
+                            class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                        >
+
+                            <div>
+
+                                <h2
+                                    class="text-lg font-semibold text-heading"
+                                >
+                                    Requests by Category
+                                </h2>
+
+                                <p
+                                    class="mt-1 text-sm text-text-secondary"
+                                >
+                                    Request volume across all service categories
+                                </p>
+
+                            </div>
+
+                            <div
+                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand"
+                            >
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="relative min-h-[600px] w-full flex-1"
+                        >
+
+                            <canvas
+                                id="categoryChart"
+                            ></canvas>
+
+                            <div
+                                id="categoryEmpty"
+                                class="absolute inset-0 hidden items-center justify-center"
+                            >
+
+                                <div class="text-center">
+
+                                    <div
+                                        class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand"
+                                    >
+                                        <i
+                                            class="fa-solid fa-folder-open text-xl"
+                                        ></i>
+                                    </div>
+
+                                    <p
+                                        class="mt-3 text-sm font-semibold text-heading"
+                                    >
+                                        No category data
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="flex min-h-0 flex-1 flex-col rounded-admin-xl border border-border bg-surface p-5 shadow-admin"
+                    >
+
+                        <div
+                            class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                        >
+
+                            <div>
+
+                                <h2
+                                    class="text-lg font-semibold text-heading"
+                                >
+                                    Staff Performance
+                                </h2>
+
+                                <p
+                                    class="mt-1 text-sm text-text-secondary"
+                                >
+                                    Assigned versus completed requests
+                                </p>
+
+                            </div>
+
+                            <div
+                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand"
+                            >
+                                <i class="fa-solid fa-users-gear"></i>
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="relative min-h-[500px] w-full flex-1"
+                        >
+
+                            <canvas
+                                id="staffChart"
+                            ></canvas>
+
+                            <div
+                                id="staffEmpty"
+                                class="absolute inset-0 hidden items-center justify-center"
+                            >
+
+                                <div class="text-center">
+
+                                    <div
+                                        class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand"
+                                    >
+                                        <i
+                                            class="fa-solid fa-users text-xl"
+                                        ></i>
+                                    </div>
+
+                                    <p
+                                        class="mt-3 text-sm font-semibold text-heading"
+                                    >
+                                        No staff data
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="overflow-hidden rounded-admin-xl border border-border bg-surface shadow-admin"
+                    >
+
+                        <div
+                            class="border-b border-border px-5 py-5"
+                        >
+
+                            <div
+                                class="flex items-center justify-between gap-4"
+                            >
+
+                                <div>
+
+                                    <h2
+                                        class="text-lg font-semibold text-heading"
+                                    >
+                                        Top Service Categories
+                                    </h2>
+
+                                    <p
+                                        class="mt-1 text-sm text-text-secondary"
+                                    >
+                                        Most requested service categories
+                                    </p>
+
+                                </div>
+
+                                <div
+                                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand"
+                                >
+                                    <i class="fa-solid fa-ranking-star"></i>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="overflow-x-auto">
+
+                            <table
+                                class="w-full min-w-[600px]"
+                            >
+
+                                <thead>
+
+                                    <tr
+                                        class="bg-table-header"
+                                    >
+
+                                        <th
+                                            class="w-24 px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            Rank
+                                        </th>
+
+                                        <th
+                                            class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            Category
+                                        </th>
+
+                                        <th
+                                            class="w-40 px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            Requests
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody
+                                    class="divide-y divide-table-border"
+                                >
+
+                                    <% if (
+                                        dashboard.topCategories &&
+                                        dashboard.topCategories.length
+                                    ) { %>
+
+                                        <% dashboard.topCategories.forEach(
+                                            (item, index) => {
+                                        %>
+
+                                            <tr
+                                                class="bg-table-row transition hover:bg-table-row-hover"
+                                            >
+
+                                                <!-- RANK -->
+
+                                                <td
+                                                    class="px-5 py-4"
+                                                >
+
+                                                    <div
+                                                        class="flex h-8 w-8 items-center justify-center rounded-full
+                                                        <%= index === 0
+                                                            ? 'bg-brand text-white'
+                                                            : index === 1
+                                                                ? 'bg-brand-soft text-brand'
+                                                                : 'bg-background text-text-secondary'
+                                                        %>"
+                                                    >
+                                                        <%= index + 1 %>
+                                                    </div>
+
+                                                </td>
+
+
+                                                <!-- CATEGORY -->
+
+                                                <td
+                                                    class="px-5 py-4"
+                                                >
+
+                                                    <div
+                                                        class="flex items-center gap-3"
+                                                    >
+
+                                                        <div
+                                                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand"
+                                                        >
+                                                            <i
+                                                                class="fa-solid fa-tag text-sm"
+                                                            ></i>
+                                                        </div>
+
+                                                        <span
+                                                            class="font-semibold text-text-primary"
+                                                        >
+                                                            <%= item.category || "Unknown" %>
+                                                        </span>
+
+                                                    </div>
+
+                                                </td>
+
+
+                                                <!-- REQUESTS -->
+
+                                                <td
+                                                    class="px-5 py-4 text-center"
+                                                >
+
+                                                    <span
+                                                        class="inline-flex min-w-12 items-center justify-center rounded-full bg-brand-soft px-3 py-1.5 text-sm font-semibold text-brand"
+                                                    >
+                                                        <%= item.totalRequests || 0 %>
+                                                    </span>
+
+                                                </td>
+
+                                            </tr>
+
+                                        <% }) %>
+
+                                    <% } else { %>
+
+                                        <tr>
+
+                                            <td
+                                                colspan="3"
+                                                class="px-5 py-14 text-center"
+                                            >
+
+                                                <div
+                                                    class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand"
+                                                >
+                                                    <i
+                                                        class="fa-solid fa-folder-open text-xl"
+                                                    ></i>
+                                                </div>
+
+                                                <p
+                                                    class="mt-3 text-sm font-semibold text-heading"
+                                                >
+                                                    No category data available
+                                                </p>
+
+                                                <p
+                                                    class="mt-1 text-xs text-text-muted"
+                                                >
+                                                    Category statistics will appear here.
+                                                </p>
+
+                                            </td>
+
+                                        </tr>
+
+                                    <% } %>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+  <script>
+    const dashboardData = <%- JSON.stringify(dashboard || {}) %>;
+    const summary = dashboardData.summary || {};
+    const categoryWise = dashboardData.categoryWise || [];
+    const statusWise = dashboardData.statusWise || [];
+    const monthly = dashboardData.monthly || [];
+    const staffPerformance = dashboardData.staffPerformance || [];
+    const averageCompletionTime = Number(dashboardData.averageCompletionTime || 0);
+
+    console.log("Dashboard Data:", dashboardData);
+
+    const currentDateElement = document.getElementById("currentDate");
+
+    if (currentDateElement) {
+        currentDateElement.textContent = new Date().toLocaleDateString("en-IN", {
+            weekday: "short",
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    }
+
+    const averageTimeElement = document.getElementById("averageCompletionTime");
+
+    if (averageTimeElement) {
+        if (averageCompletionTime > 0) {
+            const totalHours = averageCompletionTime / (1000 * 60 * 60);
+
+            if (totalHours < 1) {
+                const minutes = Math.max(1, Math.round(totalHours * 60));
+                averageTimeElement.textContent = `${minutes}m`;
+            } else {
+                const hours = Math.floor(totalHours);
+                const minutes = Math.round((totalHours - hours) * 60);
+                averageTimeElement.textContent =
+                    minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+            }
+        } else {
+            averageTimeElement.textContent = "0h";
+        }
+    }
+
+    Chart.defaults.font.family =
+        "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif";
+
+    Chart.defaults.color = "#64748b";
+
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+            intersect: false,
+            mode: "index",
+        },
+        plugins: {
+            legend: {
+                position: "bottom",
+                labels: {
+                    usePointStyle: true,
+                    pointStyle: "circle",
+                    padding: 18,
+                    boxWidth: 8,
+                },
+            },
+            tooltip: {
+                padding: 12,
+                cornerRadius: 8,
+            },
+        },
+    };
+
+    const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ];
+
+    const monthlyLabels = monthly.map((item) => {
+        const month = Number(item.month);
+        const year = Number(item.year);
+
+        return `${monthNames[month - 1]} ${year}`;
+    });
+
+    const monthlyTotal = monthly.map((item) =>
+        Number(item.totalRequests || 0)
+    );
+
+    const monthlyCompleted = monthly.map((item) =>
+        Number(item.completedRequests || 0)
+    );
+
+    const monthlyPending = monthly.map((item) =>
+        Number(item.pendingRequests || 0)
+    );
+
+    const monthlyCanvas = document.getElementById("monthlyChart");
+
+    if (monthlyCanvas && monthlyLabels.length) {
+        new Chart(monthlyCanvas, {
+            type: "line",
+            data: {
+                labels: monthlyLabels,
+                datasets: [
+                    {
+                        label: "Total Requests",
+                        data: monthlyTotal,
+                        borderWidth: 3,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: false,
+                    },
+                    {
+                        label: "Completed",
+                        data: monthlyCompleted,
+                        borderWidth: 2,
+                        tension: 0.35,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                        fill: false,
+                    },
+                    {
+                        label: "Pending",
+                        data: monthlyPending,
+                        borderWidth: 2,
+                        tension: 0.35,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                        fill: false,
+                    },
+                ],
+            },
+            options: {
+                ...commonOptions,
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                        },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                },
+            },
+        });
+    } else {
+        document.getElementById("monthlyEmpty")?.classList.replace("hidden", "flex");
+    }
+
+    const statusLabels = statusWise.map((item) => formatStatus(item.status));
+
+    const statusValues = statusWise.map((item) =>
+        Number(item.total || 0)
+    );
+
+    const statusCanvas = document.getElementById("statusChart");
+
+    if (statusCanvas && statusLabels.length) {
+        new Chart(statusCanvas, {
+            type: "doughnut",
+            data: {
+                labels: statusLabels,
+                datasets: [
+                    {
+                        label: "Requests",
+                        data: statusValues,
+                        borderWidth: 3,
+                        hoverOffset: 8,
+                    },
+                ],
+            },
+            options: {
+                ...commonOptions,
+                cutout: "68%",
+            },
+        });
+    } else {
+        document.getElementById("statusEmpty")?.classList.replace("hidden", "flex");
+    }
+
+    const categoryLabels = categoryWise.map(
+        (item) => item.category || "Unknown"
+    );
+
+    const categoryValues = categoryWise.map((item) =>
+        Number(item.totalRequests || 0)
+    );
+
+    const categoryCanvas = document.getElementById("categoryChart");
+
+    if (categoryCanvas && categoryLabels.length) {
+        new Chart(categoryCanvas, {
+            type: "bar",
+            data: {
+                labels: categoryLabels,
+                datasets: [
+                    {
+                        label: "Requests",
+                        data: categoryValues,
+                        borderWidth: 0,
+                        borderRadius: 5,
+                        barThickness: 16,
+                    },
+                ],
+            },
+            options: {
+                ...commonOptions,
+                indexAxis: "y",
+                plugins: {
+                    ...commonOptions.plugins,
+                    legend: {
+                        display: false,
+                    },
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                    y: {
+                        grid: {
+                            display: false,
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            font: {
+                                size: 11,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    } else {
+        document.getElementById("categoryEmpty")?.classList.replace("hidden", "flex");
+    }
+
+    const staffLabels = staffPerformance.map(
+        (item) => item.staffName || "Unknown Staff"
+    );
+
+    const assignedValues = staffPerformance.map((item) =>
+        Number(item.assignedRequests || 0)
+    );
+
+    const completedValues = staffPerformance.map((item) =>
+        Number(item.completedRequests || 0)
+    );
+
+    const staffCanvas = document.getElementById("staffChart");
+
+    if (staffCanvas && staffLabels.length) {
+        new Chart(staffCanvas, {
+            type: "bar",
+            data: {
+                labels: staffLabels,
+                datasets: [
+                    {
+                        label: "Assigned",
+                        data: assignedValues,
+                        borderWidth: 0,
+                        borderRadius: 5,
+                        barThickness: 14,
+                    },
+                    {
+                        label: "Completed",
+                        data: completedValues,
+                        borderWidth: 0,
+                        borderRadius: 5,
+                        barThickness: 14,
+                    },
+                ],
+            },
+            options: {
+                ...commonOptions,
+                indexAxis: "y",
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        },
+                    },
+                    y: {
+                        grid: {
+                            display: false,
+                        },
+                        ticks: {
+                            autoSkip: false,
+                            font: {
+                                size: 11,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    } else {
+        document.getElementById("staffEmpty")?.classList.replace("hidden", "flex");
+    }
+
+    function formatStatus(status) {
+        if (!status) {
+            return "Unknown";
+        }
+
+        return status
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+</script>
+
+
+
+    <!-- <script src="/js/dashboard.js"></script> -->
+    <script src="/js/adminNotification.js"></script>
+
+    <!-- <script>
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            () => {
+
+                if (
+                    window.AdminNotification &&
+                    AdminNotification.getUnreadCount
+                ) {
+
+                    AdminNotification.getUnreadCount();
+
+                }
+
+            }
+        );
+
+    </script> -->
+   <script src="/js/adminNotification.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/adminSocket.js"></script>
+
+<script src="/js/adminNotificationPage.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    AdminNotification.getUnreadCount();
+  });
+</script>
+</body>
+
+</html>

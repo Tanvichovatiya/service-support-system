@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Categories</title>
+
+    <link rel="stylesheet" href="/css/output.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css"
+        integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <%- include('../../partials/toast') %>
+
+</head>
+
+<body class="bg-page-background font-admin text-text antialiased">
+    <div class="flex h-screen flex-col md:flex-row">
+        <%- include('../../partials/sidebar') %>
+
+        <main class="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+            <header class="border-b border-border bg-card">
+                <div class="flex items-center justify-between px-6 py-5">
+                    <div>
+                        <p class="text-sm font-medium text-brand">Service Management</p>
+                        <h1 class="mt-1 text-2xl font-bold text-heading">Categories</h1>
+                        <p class="mt-1 text-sm text-text-muted">Manage service request categories</p>
+                    </div>
+
+                    <button type="button" id="openAddCategory" class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-admin bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-dark hover:shadow-admin-hover">
+                        <i class="fa-solid fa-plus"></i>
+                        Add Category
+                    </button>
+                </div>
+            </header>
+
+            <section class="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8">
+                <div class="overflow-hidden rounded-admin-xl border border-border bg-card shadow-admin">
+                    <div class="border-b border-border bg-card px-4 py-5 sm:px-6">
+                        <form method="GET" action="/admin/category" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
+                            <div class="md:col-span-2 xl:col-span-5">
+                                <label for="search" class="mb-2 block text-sm font-medium text-text-primary">Search</label>
+
+                                <div class="relative">
+                                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-text-muted">
+                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                    </span>
+
+                                    <input id="search" type="text" name="search" value="<%= query.search || '' %>" placeholder="Search by category name..." class="h-11 w-full rounded-admin border-[1.5px] border-brand bg-page-background pl-10 pr-4 text-sm text-text-primary outline-none transition placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand/10  ">
+                                </div>
+                            </div>
+
+                            <div class="xl:col-span-2">
+                                <label for="status" class="mb-2 block text-sm font-medium text-text-primary">Status</label>
+
+                                <div class="relative">
+                                    <select id="status" name="status" class="h-11 w-full appearance-none rounded-admin border-[1.4px] border-brand bg-page-background px-4 pr-10 text-sm text-text-primary outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/10 ">
+                                        <option value="">All Status</option>
+                                        <option value="active" <%= query.status === "active" ? "selected" : "" %>>Active</option>
+                                        <option value="inactive" <%= query.status === "inactive" ? "selected" : "" %>>Inactive</option>
+                                    </select>
+
+                                    <i class="fa-solid fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted"></i>
+                                </div>
+                            </div>
+
+                            <div class="xl:col-span-2">
+                                <label for="sort" class="mb-2 block text-sm font-medium text-text-primary">Sort By</label>
+
+                                <div class="relative">
+                                    <select id="sort" name="sort" class="h-11 w-full appearance-none rounded-admin border-[1.4px] border-brand bg-page-background px-4 pr-10 text-sm text-text-primary outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/10">
+                                        <option value="newest" <%= query.sort === "newest" || !query.sort ? "selected" : "" %>>Newest</option>
+                                        <option value="oldest" <%= query.sort === "oldest" ? "selected" : "" %>>Oldest</option>
+                                        <option value="most_requests" <%= query.sort === "most_requests" ? "selected" : "" %>>Most Requests</option>
+                                        <option value="least_requests" <%= query.sort === "least_requests" ? "selected" : "" %>>Least Requests</option>
+                                    </select>
+
+                                    <i class="fa-solid fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted"></i>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 md:col-span-2 xl:col-span-3">
+                                <button type="submit" class="inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-admin bg-brand px-4 text-sm font-semibold text-white  transition hover:bg-brand-dark hover:shadow-admin-hover">
+                                    <i class="fa-solid fa-filter"></i>
+                                    Apply
+                                </button>
+
+                                <a href="/admin/category" class="inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-admin border-[1.4px] border-brand bg-card px-4 text-sm font-semibold text-text-secondary  transition hover:bg-page-background ">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                    Reset
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[850px]">
+                            <thead>
+                                <tr class="bg-table-header">
+                                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text">Category</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text">Description</th>
+                                    <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-table-header-text">Requests</th>
+                                    <th class="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wide text-table-header-text">Status</th>
+                                    <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-table-header-text">Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="divide-y divide-table-border">
+                                <% if (!categories || categories.length === 0) { %>
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-16 text-center">
+                                            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 text-brand">
+                                                <i class="fa-solid fa-layer-group text-xl"></i>
+                                            </div>
+
+                                            <p class="mt-4 font-semibold text-text-primary">No categories found</p>
+                                        </td>
+                                    </tr>
+                                <% } else { %>
+                                    <% categories.forEach((category) => { %>
+                                        <tr class="bg-table-row transition hover:bg-table-row-hover">
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+                                                        <i class="fa-solid fa-tag text-sm"></i>
+                                                    </div>
+
+                                                    <div class="min-w-0">
+                                                        <p class="truncate font-semibold text-text-primary"><%= category.name %></p>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <td class="max-w-md px-6 py-4">
+                                                <p class="truncate text-sm text-text-secondary" title="<%= category.description || '' %>">
+                                                    <%= category.description || "-" %>
+                                                </p>
+                                            </td>
+
+                                            <td class="px-6 py-4 text-center">
+                                                <span class="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand">
+                                                    <i class="fa-solid fa-ticket"></i>
+                                                    <%= category.totalRequests || 0 %>
+                                                </span>
+                                            </td>
+
+                                            <td class="px-6 py-4 text-center">
+                                                <% if (category.isActive) { %>
+                                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-success-light px-3 py-1 text-xs font-semibold text-success-dark">
+                                                        <i class="fa-solid fa-circle-check"></i>
+                                                        Active
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-danger-light px-3 py-1 text-xs font-semibold text-danger-dark">
+                                                        <i class="fa-solid fa-circle-xmark"></i>
+                                                        Inactive
+                                                    </span>
+                                                <% } %>
+                                            </td>
+
+                                            <td class="px-6 py-4">
+                                                <div class="flex justify-end gap-2">
+                                                    <button type="button" class="view-category-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-info transition hover:bg-info-light" data-id="<%= category._id %>" title="View Category">
+                                                        <i class="fa-solid fa-eye"></i>
+                                                    </button>
+
+                                                    <button type="button" class="edit-category-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-brand transition hover:bg-brand/10" data-id="<%= category._id %>" title="Edit Category">
+                                                        <i class="fa-solid fa-pen"></i>
+                                                    </button>
+
+                                                    <form method="POST" action="/admin/category/<%= category._id %>/status" class="inline">
+                                                        <button type="submit" class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border transition hover:bg-page-background" title="<%= category.isActive ? 'Deactivate' : 'Activate' %>">
+                                                            <% if (category.isActive) { %>
+                                                                <i class="fa-solid fa-toggle-on text-success"></i>
+                                                            <% } else { %>
+                                                                <i class="fa-solid fa-toggle-off text-text-muted"></i>
+                                                            <% } %>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                <% } %>
+                            </tbody>
+                        </table>
+
+                        <%- include("../../partials/pagination", { pagination, query, baseUrl }) %>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <%- include("category-modal") %>
+
+    <script src="/js/category.js"></script>
+   <script src="/js/adminNotification.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/adminSocket.js"></script>
+
+<script src="/js/adminNotificationPage.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    AdminNotification.getUnreadCount();
+  });
+</script>
+</body>
+</html>

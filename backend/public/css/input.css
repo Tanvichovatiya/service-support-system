@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+@theme {
+  /* ================================
+     FONT
+  ================================= */
+
+  --font-admin:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+
+
+  /* ================================
+     BRAND — PRIMARY BLUE
+  ================================= */
+
+  --color-brand: #2563eb;
+  --color-brand-dark: #1d4ed8;
+  --color-brand-deep: #172554;
+  --color-brand-light: #60a5fa;
+
+  --color-brand-soft: #eff6ff;
+  --color-brand-muted: #dbeafe;
+
+
+  /* ================================
+     ACCENT — BLUE / CYAN
+  ================================= */
+
+  --color-accent: #3b82f6;
+  --color-accent-dark: #2563eb;
+  --color-accent-light: #93c5fd;
+
+  --color-accent-soft: #eff6ff;
+
+
+  /* ================================
+     BACKGROUND
+  ================================= */
+
+  --color-background: #f5f8fc;
+  --color-background-soft: #eef4fa;
+
+  --color-surface: #ffffff;
+  --color-surface-soft: #f8fafc;
+
+
+  /* ================================
+     TEXT
+  ================================= */
+
+  --color-text-primary: #172033;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-text-light: #cbd5e1;
+
+  --color-heading: #172033;
+  --color-heading-brand: #1d4ed8;
+
+
+  /* ================================
+     BORDER
+  ================================= */
+
+  --color-border: #dbe3ee;
+  --color-border-light: #edf2f7;
+  --color-border-dark: #cbd5e1;
+
+
+  /* ================================
+     STATUS
+  ================================= */
+
+  --color-success: #16a34a;
+  --color-success-light: #f0fdf4;
+  --color-success-dark: #15803d;
+
+  --color-warning: #d97706;
+  --color-warning-light: #fffbeb;
+  --color-warning-dark: #b45309;
+
+  --color-danger: #dc2626;
+  --color-danger-light: #fef2f2;
+  --color-danger-dark: #b91c1c;
+
+  --color-info: #0284c7;
+  --color-info-light: #f0f9ff;
+
+
+  /* ================================
+     SIDEBAR
+  ================================= */
+
+  --color-sidebar-start: #1e3a8a;
+  --color-sidebar-middle: #1e40af;
+  --color-sidebar-end: #172554;
+
+  --color-sidebar-text: #eff6ff;
+  --color-sidebar-muted: #bfdbfe;
+
+  --color-sidebar-hover: rgb(255 255 255 / 0.08);
+  --color-sidebar-active: rgb(255 255 255 / 0.14);
+
+  --color-sidebar-border: rgb(255 255 255 / 0.12);
+
+
+  /* ================================
+     LOGIN
+  ================================= */
+
+  --color-login-background: #f5f8fc;
+  --color-login-card: rgb(255 255 255 / 0.95);
+
+
+  /* ================================
+     INPUT
+  ================================= */
+
+  --color-input-background: #ffffff;
+  --color-input-border: #dbe3ee;
+  --color-input-focus: #2563eb;
+
+  --color-input-placeholder: #94a3b8;
+
+
+  /* ================================
+     TABLE
+  ================================= */
+
+  --color-table-header: #1e3a8a;
+  --color-table-header-text: #ffffff;
+
+  --color-table-row: #ffffff;
+  --color-table-row-hover: #f1f5f9;
+
+  --color-table-border: #dbe3ee;
+
+
+  /* ================================
+     MODAL / OVERLAY
+  ================================= */
+
+  --color-overlay: rgb(15 23 42 / 0.45);
+  --color-modal-background: #ffffff;
+
+
+  /* ================================
+     RADIUS
+  ================================= */
+
+  --radius-admin-sm: 0.5rem;
+  --radius-admin: 0.75rem;
+  --radius-admin-lg: 1rem;
+  --radius-admin-xl: 1.25rem;
+
+
+  /* ================================
+     SHADOWS
+  ================================= */
+
+   --shadow-admin: 0 8px 50px rgb(37 99 235);
+  --shadow-admin-hover: 0 20px 50px rgb(29 78 216 / 0.35);
+  --shadow-admin-sm: 0 4px 20px rgb(79 70 229 / 0.3);
+  --shadow-admin-md: 0 10px 25px rgb(30 64 175 / 0.2);
+}

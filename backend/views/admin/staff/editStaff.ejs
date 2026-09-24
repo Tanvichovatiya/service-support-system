@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full overflow-hidden">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Edit Staff</title>
+
+  <link rel="stylesheet" href="/css/output.css">
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css"
+    integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  >
+
+  <%- include('../../partials/toast') %>
+  
+</head>
+
+<body class="bg-background font-admin text-text-primary antialiased">
+
+  <div class="flex h-screen flex-col overflow-hidden md:flex-row">
+
+    <%- include('../../partials/sidebar') %>
+
+    <main class="flex min-w-0 flex-1 flex-col overflow-hidden">
+
+      <header class="shrink-0 border-b border-border bg-surface shadow-admin">
+
+        <div class="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6">
+
+          <div class="flex items-center gap-3 sm:gap-4">
+
+            <a
+              href="/admin/staff"
+              aria-label="Back to staff"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-admin border border-border text-text-secondary transition hover:border-brand hover:bg-brand-soft hover:text-brand"
+            >
+              <i class="fa-solid fa-arrow-left"></i>
+            </a>
+
+            <div class="min-w-0">
+
+              <p class="text-sm font-semibold text-brand">
+                Staff Management
+              </p>
+
+              <h1 class="mt-1 truncate text-xl font-bold text-heading sm:text-2xl">
+                Edit Staff Member
+              </h1>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </header>
+
+      <section class="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8">
+
+        <div class="mx-auto w-full max-w-5xl">
+
+          <form
+           
+            id="editStaffForm"
+            data-staff-id="<%= staff._id %>"
+            class="overflow-hidden rounded-admin-xl border border-border bg-surface shadow-admin">
+
+            <div class="border-b border-border p-5 sm:p-8">
+
+              <div class="mb-6">
+
+                <div class="mb-2 flex items-center gap-3">
+
+                  <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand">
+                    <i class="fa-solid fa-user"></i>
+                  </div>
+
+                  <h2 class="text-lg font-bold text-heading">
+                    Personal Information
+                  </h2>
+
+                </div>
+
+                <p class="text-sm leading-6 text-text-secondary">
+                  Update the staff member's basic personal information.
+                </p>
+
+              </div>
+
+
+              <div class="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2">
+
+                <div>
+
+                  <label
+                    for="firstname"
+                    class="mb-2 block text-sm font-semibold text-heading"
+                  >
+                    First Name
+                    <span class="text-danger">*</span>
+                  </label>
+
+                  <input
+                    type="text"
+                    id="firstname"
+                    name="firstname"
+                    value="<%= staff.firstname || '' %>"
+                    placeholder="Enter first name"
+                    required
+                    maxlength="50"
+                    autocomplete="given-name"
+                    class="w-full rounded-admin border border-input-border bg-input-background px-4 py-3 text-sm text-text-primary outline-none transition placeholder:text-input-placeholder focus:border-input-focus focus:ring-4 focus:ring-brand/10"
+                  >
+
+                </div>
+
+                <div>
+
+                  <label
+                    for="lastname"
+                    class="mb-2 block text-sm font-semibold text-heading"
+                  >
+                    Last Name
+                    <span class="text-danger">*</span>
+                  </label>
+
+                  <input
+                    type="text"
+                    id="lastname"
+                    name="lastname"
+                    value="<%= staff.lastname || '' %>"
+                    placeholder="Enter last name"
+                    required
+                    maxlength="50"
+                    autocomplete="family-name"
+                    class="w-full rounded-admin border border-input-border bg-input-background px-4 py-3 text-sm text-text-primary outline-none transition placeholder:text-input-placeholder focus:border-input-focus focus:ring-4 focus:ring-brand/10"
+                  >
+
+                </div>
+
+                <div>
+
+                  <label
+                    for="email"
+                    class="mb-2 block text-sm font-semibold text-heading"
+                  >
+                    Email Address
+                  </label>
+
+                  <div class="relative">
+
+                    <i
+                      class="fa-regular fa-envelope pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-input-placeholder"
+                    ></i>
+
+                    <input
+                      type="email"
+                      id="email"
+                      value="<%= staff.email || '' %>"
+                      disabled
+                      class="w-full cursor-not-allowed rounded-admin border border-input-border bg-background-soft py-3 pl-11 pr-4 text-sm text-text-secondary outline-none"
+                    >
+
+                  </div>
+
+                  <p class="mt-1.5 text-xs text-text-secondary">
+                    Email address cannot be changed.
+                  </p>
+
+                </div>
+
+                <div>
+
+                  <label
+                    for="gender"
+                    class="mb-2 block text-sm font-semibold text-heading"
+                  >
+                    Gender
+                    <span class="text-danger">*</span>
+                  </label>
+
+                  <select
+                    id="gender"
+                    name="gender"
+                    required
+                    class="w-full rounded-admin border border-input-border bg-input-background px-4 py-3 text-sm text-text-primary outline-none transition focus:border-input-focus focus:ring-4 focus:ring-brand/10"
+                  >
+
+                    <option value="">
+                      Select gender
+                    </option>
+
+                    <option
+                      value="Male"
+                      <%= staff.gender === "Male" ? "selected" : "" %>
+                    >
+                      Male
+                    </option>
+
+                    <option
+                      value="Female"
+                      <%= staff.gender === "Female" ? "selected" : "" %>
+                    >
+                      Female
+                    </option>
+
+                  </select>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+          
+
+            <div class="border-b border-border p-5 sm:p-8">
+
+              <div class="mb-6">
+
+                <div class="mb-2 flex items-center gap-3">
+
+                  <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand">
+                    <i class="fa-solid fa-briefcase"></i>
+                  </div>
+
+                  <h2 class="text-lg font-bold text-heading">
+                    Employment Information
+                  </h2>
+
+                </div>
+
+                <p class="text-sm leading-6 text-text-secondary">
+                  Update the staff member's employee details.
+                </p>
+
+              </div>
+
+
+              <div class="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2">
+
+                <div>
+
+                  <label
+                    for="employeeId"
+                    class="mb-2 block text-sm font-semibold text-heading"
+                  >
+                    Employee ID
+                    <span class="text-danger">*</span>
+                  </label>
+
+                  <div class="relative">
+
+                    <i
+                      class="fa-solid fa-id-card pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-input-placeholder"
+                    ></i>
+
+                    <input
+                      type="text"
+                      id="employeeId"
+                      name="employeeId"
+                      value="<%= staff.employeeId || '' %>"
+                      placeholder="Enter employee ID"
+                      required
+                      maxlength="50"
+                      class="w-full rounded-admin border border-input-border bg-input-background py-3 pl-11 pr-4 text-sm text-text-primary outline-none transition placeholder:text-input-placeholder focus:border-input-focus focus:ring-4 focus:ring-brand/10"
+                    >
+
+                  </div>
+
+                </div>
+
+
+                <div>
+
+                  <label
+                    for="department"
+                    class="mb-2 block text-sm font-semibold text-heading"
+                  >
+                    Department
+                    <span class="text-danger">*</span>
+                  </label>
+
+                  <div class="relative">
+
+                    <i
+                      class="fa-solid fa-building pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-input-placeholder"
+                    ></i>
+
+                    <select
+                      id="department"
+                      name="department"
+                      required
+                      class="w-full rounded-admin border border-input-border bg-input-background py-3 pl-11 pr-4 text-sm text-text-primary outline-none transition focus:border-input-focus focus:ring-4 focus:ring-brand/10"
+                    >
+
+                      <option value="">
+                        Select department
+                      </option>
+
+                      <option
+                        value="Technical Support"
+                        <%= staff.department === "Technical Support" ? "selected" : "" %>
+                      >
+                        Technical Support
+                      </option>
+
+                      <option
+                        value="Customer Support"
+                        <%= staff.department === "Customer Support" ? "selected" : "" %>
+                      >
+                        Customer Support
+                      </option>
+
+                      <option
+                        value="Billing"
+                        <%= staff.department === "Billing" ? "selected" : "" %>
+                      >
+                        Billing
+                      </option>
+
+                      <option
+                        value="Operations"
+                        <%= staff.department === "Operations" ? "selected" : "" %>
+                      >
+                        Operations
+                      </option>
+
+                    </select>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+
+            <div class="border-b border-border p-5 sm:p-8">
+
+              <div class="mb-6">
+
+                <div class="mb-2 flex items-center gap-3">
+
+                  <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                  </div>
+
+                  <h2 class="text-lg font-bold text-heading">
+                    Skills
+                  </h2>
+
+                </div>
+
+                <p class="text-sm leading-6 text-text-secondary">
+                  Select skills that can help with service request assignment.
+                </p>
+
+              </div>
+
+
+              <%
+                const availableSkills = [
+                  "Technical Support",
+                  "Networking",
+                  "Hardware",
+                  "Software",
+                  "Database",
+                  "System Administration",
+                  "IT Support",
+                  "Customer Support"
+                ];
+              %>
+
+
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+                <% availableSkills.forEach((skill) => { %>
+
+                  <label
+                    class="skill-card group flex cursor-pointer items-center gap-3  p-3  "
+                  >
+
+                   <input
+                    type="checkbox"
+                    name="skills"
+                    value="<%= skill %>"
+                    <%= Array.isArray(staff.skills) && staff.skills.includes(skill) ? "checked" : "" %>
+                     class="skill-checkbox h-4 w-4 cursor-pointer rounded border-input-border accent-brand"/>
+                    
+
+                    <span class="skill-label text-sm font-medium text-text-secondary ">
+                      <%= skill %>
+                    </span>
+
+                  </label>
+
+                <% }) %>
+
+              </div>
+
+              <p
+                id="skillsError"
+                class="mt-3 hidden text-sm font-medium text-danger"
+              >
+                Please select at least one skill.
+              </p>
+
+            </div>
+
+
+            <div class="  sm:p-8">
+
+              <div id="staffStatusWrapper">
+
+                <label
+                  for="staffStatus"
+                  class="flex cursor-pointer items-center justify-between rounded-admin border border-border bg-brand-soft px-4 py-4 transition hover:border-brand hover:shadow-admin-sm"
+                >
+
+                  <div class="flex min-w-0 items-center gap-3">
+
+                    <!-- Status Icon -->
+                    <div
+                      id="staffStatusIconWrapper"
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success-light text-success"
+                    >
+
+                      <i
+                        id="staffStatusIcon"
+                        class="fa-solid fa-circle-check"
+                      ></i>
+
+                    </div>
+
+
+                    <!-- Status Text -->
+                    <div class="min-w-0">
+
+                      <p
+                        id="staffStatusTitle"
+                        class="text-sm font-semibold text-heading"
+                      >
+                        Active Staff
+                      </p>
+
+                      <p
+                        id="staffStatusDescription"
+                        class="mt-1 text-xs leading-5 text-text-secondary"
+                      >
+                        Staff can access the system and receive service requests.
+                      </p>
+
+                    </div>
+
+                  </div>
+
+
+                  <!-- Toggle -->
+                  <div class="relative ml-4 shrink-0">
+
+                    <input
+                      type="checkbox"
+                      id="staffStatus"
+                      name="isActive"
+                      value="true"
+                      <%= staff.isActive ? "checked" : "" %>
+                      class="peer sr-only"
+                    >
+
+                    <div
+                      class="h-6 w-11 rounded-full bg-border-dark transition-colors peer-checked:bg-brand peer-focus-visible:ring-4 peer-focus-visible:ring-brand/20"
+                    ></div>
+
+                    <div
+                      class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5"
+                    ></div>
+
+                  </div>
+
+                </label>
+
+              </div>
+
+            </div>
+
+            <div class="flex flex-col-reverse gap-3 bg-surface px-5 py-5 sm:flex-row sm:justify-end sm:px-8">
+
+              <a
+                href="/admin/staff"
+                class="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-admin border border-border px-5 py-2.5 text-sm font-semibold text-text-secondary transition hover:border-border-dark hover:bg-background-soft hover:text-heading"
+              >
+                Cancel
+              </a>
+
+
+              <button
+                type="submit"
+                id="submitButton"
+                class="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-admin bg-brand px-6 py-2.5 text-sm font-semibold text-white shadow-admin-sm transition hover:bg-brand-dark hover:shadow-admin-md focus:outline-none focus:ring-4 focus:ring-brand/15"
+              >
+
+                <i class="fa-solid fa-floppy-disk"></i>
+
+                <span data-submit-text>
+                  Save Changes
+                </span>
+
+              </button>
+
+            </div>
+
+          </form>
+
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <script src="/js/editStaff.js"></script>
+ <script src="/js/adminNotification.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/adminSocket.js"></script>
+
+<script src="/js/adminNotificationPage.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    AdminNotification.getUnreadCount();
+  });
+</script>
+</body>
+
+</html>

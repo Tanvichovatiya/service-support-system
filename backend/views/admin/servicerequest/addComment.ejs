@@ -1,0 +1,197 @@
+
+
+<div
+    id="addCommentModal"
+    class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/40 px-4 py-6 backdrop-blur-sm"
+>
+    <div
+        class="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border-2 border-accent-dark bg-accent-soft shadow-admin-lg"
+    >
+
+      
+        <div
+            class="flex items-center justify-between border-b border-border-light bg-accent-soft px-5 py-4 sm:px-6"
+        >
+            <div class="flex min-w-0 items-center gap-3">
+
+                <div
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"
+                >
+                    <i class="fa-solid fa-comment-medical text-sm"></i>
+                </div>
+
+                <div class="min-w-0">
+                    <h2
+                        class="truncate text-lg font-bold text-heading"
+                    >
+                        Add Comment
+                    </h2>
+
+                    <p
+                        class="mt-0.5 truncate text-xs text-text-secondary"
+                    >
+                        Add a comment to this service request
+                    </p>
+                </div>
+            </div>
+
+            <button
+                type="button"
+                id="closeAddCommentModal"
+                class="ml-4 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-accent-light transition hover:bg-danger-light hover:text-danger focus:outline-none focus:ring-4 focus:ring-accent-soft"
+                aria-label="Close modal"
+            >
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+
+        <!-- ==================================================
+             FORM
+        =================================================== -->
+        <form
+            id="addCommentForm"
+            class="overflow-y-auto bg-surface px-5 py-5 sm:px-6 sm:py-6"
+        >
+
+            <input
+                type="hidden"
+                id="commentRequestId"
+                name="requestId"
+            />
+
+
+            <!-- Request Info -->
+            <div
+                class="mb-5 flex items-center gap-3 rounded-xl border border-border bg-surface-soft px-4 py-3.5"
+            >
+
+                <div
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand"
+                >
+                    <i class="fa-solid fa-ticket text-sm"></i>
+                </div>
+
+                <div class="min-w-0">
+                    <p
+                        class="text-xs font-medium uppercase tracking-wide text-text-muted"
+                    >
+                        Service Request
+                    </p>
+
+                    <p
+                        id="commentRequestTitle"
+                        class="mt-0.5 truncate text-sm font-semibold text-text-primary"
+                    >
+                        Service Request
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- Comment -->
+            <div>
+
+                <div class="mb-2 flex items-center justify-between">
+
+                    <label
+                        for="commentMessage"
+                        class="text-sm font-semibold text-text-primary"
+                    >
+                        Comment
+
+                        <span class="ml-0.5 text-danger">
+                            *
+                        </span>
+                    </label>
+
+                    <span
+                        class="text-xs text-text-muted"
+                    >
+                        Required
+                    </span>
+
+                </div>
+
+
+                <div class="group relative">
+
+                    <div
+                        class="pointer-events-none absolute left-0 top-0 flex w-11 items-start justify-center pt-3.5 text-text-muted transition-colors group-focus-within:text-accent"
+                    >
+                        <i class="fa-solid fa-message text-sm"></i>
+                    </div>
+
+                    <textarea
+                        id="commentMessage"
+                        name="message"
+                        rows="6"
+                        maxlength="1000"
+                        autocomplete="off"
+                        placeholder="Write your comment here..."
+                        class="w-full resize-none rounded-xl border border-input-border bg-input-background py-3 pl-11 pr-4 text-sm leading-6 text-text-primary outline-none transition-all duration-200 placeholder:text-input-placeholder hover:border-accent-light hover:bg-accent-soft/10 focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent-soft"
+                    ></textarea>
+
+                </div>
+
+
+                <div class="mt-1.5 flex items-start justify-between gap-3">
+
+                    <p
+                        id="commentMessageError"
+                        class="hidden text-xs font-medium text-danger"
+                    ></p>
+
+                    <span
+                        id="commentCharacterCount"
+                        class="ml-auto shrink-0 text-xs text-text-muted"
+                    >
+                        0 / 1000
+                    </span>
+
+                </div>
+
+            </div>
+
+        </form>
+
+
+        <!-- ==================================================
+             FOOTER
+        =================================================== -->
+        <div
+            class="flex flex-col-reverse gap-2.5 border-t border-border-light bg-surface px-5 py-4 sm:flex-row sm:justify-end sm:px-6"
+        >
+
+            <button
+                type="button"
+                id="cancelAddCommentModal"
+                class="w-full cursor-pointer rounded-xl border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-text-secondary transition-all duration-200 hover:border-border-dark hover:bg-surface-soft hover:text-text-primary focus:outline-none focus:ring-4 focus:ring-accent-soft sm:w-auto"
+            >
+                Cancel
+            </button>
+
+
+            <button
+                type="submit"
+                id="submitCommentButton"
+                form="addCommentForm"
+                class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-admin-sm transition-all duration-200 hover:bg-accent-dark hover:shadow-admin focus:outline-none focus:ring-4 focus:ring-accent-soft sm:w-auto"
+            >
+
+                <i
+                    id="submitCommentIcon"
+                    class="fa-solid fa-paper-plane text-xs"
+                ></i>
+
+                <span id="submitCommentText">
+                    Add Comment
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+</div>

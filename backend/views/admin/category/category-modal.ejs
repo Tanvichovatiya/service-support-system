@@ -1,0 +1,466 @@
+
+
+<div
+    id="categoryModal"
+    class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/40 px-4 py-6 backdrop-blur-sm "
+>
+    <div
+        class="relative flex max-h-[90vh] px-6 max-w-lg flex-col overflow-hidden rounded-2xl border-2 border-accent-dark bg-accent-soft shadow-admin-lg">
+
+        <div
+            class="flex items-center justify-between border-b border-border-light bg-accent-soft px-5 py-4 sm:px-6">
+            <div class="flex min-w-0 items-center gap-3">
+
+                <div
+                    id="categoryModalIconWrapper"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"
+                >
+                    <i
+                        id="categoryModalIcon"
+                        class="fa-solid fa-plus text-sm"
+                    ></i>
+                </div>
+
+                <div class="min-w-0">
+                    <h2
+                        id="categoryModalTitle"
+                        class="truncate text-lg font-bold text-heading"
+                    >
+                        Add Category
+                    </h2>
+
+                    <p
+                        id="categoryModalSubtitle"
+                        class="mt-0.5 truncate text-xs text-text-secondary"
+                    >
+                        Create a new service category
+                    </p>
+                </div>
+            </div>
+
+            <button
+                type="button"
+                id="closeCategoryModal"
+                class="cursor-pointer ml-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-accent-light transition hover:bg-danger-light hover:text-danger focus:outline-none focus:ring-4 focus:ring-accent-soft"
+                aria-label="Close modal"
+            >
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+
+        <div
+            id="categoryModalLoading"
+            class="hidden flex-1 items-center justify-center bg-surface px-6 py-16"
+        >
+            <div class="text-center">
+
+                <div
+                    class="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-accent"
+                >
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                </div>
+
+                <p
+                    class="mt-4 text-sm font-semibold text-text-primary"
+                >
+                    Loading category
+                </p>
+
+                <p
+                    class="mt-1 text-xs text-text-secondary"
+                >
+                    Please wait...
+                </p>
+
+            </div>
+        </div>
+
+        <form
+            id="categoryForm"
+            class="overflow-y-auto bg-surface px-5 py-5 sm:px-6 sm:py-6"
+        >
+
+            <input
+                type="hidden"
+                id="categoryId"
+                name="categoryId"
+            />
+
+
+
+            <div class="mb-5">
+
+                <label
+                    for="categoryName"
+                    class="mb-2 block text-sm font-semibold text-text-primary"
+                >
+                    Category Name
+
+                    <span class="ml-0.5 text-danger">
+                        *
+                    </span>
+                </label>
+
+                <div class="group relative">
+
+                    <!-- Input Icon -->
+                    <div
+                        class="pointer-events-none absolute inset-y-0 left-0 flex w-11 items-center justify-center text-text-muted transition-colors group-focus-within:text-accent"
+                    >
+                        <i class="fa-solid fa-tag text-sm"></i>
+                    </div>
+
+                    <!-- Input -->
+                    <input
+                        type="text"
+                        id="categoryName"
+                        name="name"
+                        maxlength="100"
+                        autocomplete="off"
+                        placeholder="e.g. Technical Support"
+                        class="w-full rounded-xl border border-input-border bg-input-background py-3 pl-11 pr-4 text-sm text-text-primary outline-none transition-all duration-200 placeholder:text-input-placeholder hover:border-accent-light hover:bg-accent-soft/10 focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent-soft"
+                    />
+
+                </div>
+
+                <!-- Error -->
+                <p
+                    id="categoryNameError"
+                    class="mt-1.5 hidden text-xs font-medium text-danger"
+                ></p>
+
+            </div>
+
+
+
+            <div class="mb-5">
+
+                <div class="mb-2 flex items-center justify-between">
+
+                    <label
+                        for="categoryDescription"
+                        class="text-sm font-semibold text-text-primary"
+                    >
+                        Description
+                    </label>
+
+                    <span
+                        class="text-xs text-text-muted"
+                    >
+                        Optional
+                    </span>
+
+                </div>
+
+                <div class="group relative">
+
+                    <!-- Textarea Icon -->
+                    <div
+                        class="pointer-events-none absolute left-0 top-0 flex w-11 items-start justify-center pt-3.5 text-text-muted transition-colors group-focus-within:text-accent"
+                    >
+                        <i class="fa-solid fa-align-left text-sm"></i>
+                    </div>
+
+                    <!-- Textarea -->
+                    <textarea
+                        id="categoryDescription"
+                        name="description"
+                        rows="4"
+                        maxlength="500"
+                        placeholder="Briefly describe this service category..."
+                        class="w-full resize-none rounded-xl border border-input-border bg-input-background py-3 pl-11 pr-4 text-sm leading-6 text-text-primary outline-none transition-all duration-200 placeholder:text-input-placeholder hover:border-accent-light hover:bg-accent-soft/10 focus:border-accent focus:bg-white focus:ring-4 focus:ring-accent-soft"
+                    ></textarea>
+
+                </div>
+
+            </div>
+
+
+
+            <div
+                id="categoryStatusWrapper"
+                class="mb-5"
+            >
+
+                <label
+                    class="mb-2 block text-sm font-semibold text-text-primary"
+                >
+                    Category Status
+                </label>
+
+                <label
+                    for="categoryStatus"
+                    class="flex cursor-pointer items-center justify-between rounded-xl border border-border bg-surface-soft px-4 py-3.5 transition-all duration-200 hover:border-accent-light hover:bg-white"
+                >
+
+                    <div class="flex items-center gap-3">
+
+                        <div
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-success-light text-success"
+                        >
+                            <i class="fa-solid fa-circle-check text-sm"></i>
+                        </div>
+
+                        <div>
+
+                            <p
+                                class="text-sm font-semibold text-text-primary"
+                            >
+                                Active Category
+                            </p>
+
+                            <p
+                                class="mt-0.5 text-xs text-text-secondary"
+                            >
+                                Users can select this category.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Toggle -->
+                    <div class="relative ml-4 shrink-0">
+
+                        <input
+                            type="checkbox"
+                            id="categoryStatus"
+                            name="isActive"
+                            class="peer sr-only"
+                            checked
+                        />
+
+                        <!-- Track -->
+                        <div
+                            class="h-6 w-11 rounded-full bg-border-dark transition-colors peer-checked:bg-accent peer-focus-visible:ring-4 peer-focus-visible:ring-accent-soft"
+                        ></div>
+
+                        <!-- Thumb -->
+                        <div
+                            class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5"
+                        ></div>
+
+                    </div>
+
+                </label>
+
+            </div>
+
+
+            <!-- ==================================================
+                 TOTAL REQUESTS
+            =================================================== -->
+
+            <div
+                id="categoryRequestsWrapper"
+                class="mb-1 hidden"
+            >
+
+                <div
+                    class="flex items-center justify-between rounded-xl border border-border bg-surface-soft px-4 py-3.5"
+                >
+
+                    <div class="flex items-center gap-3">
+
+                        <div
+                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft text-accent"
+                        >
+                            <i class="fa-solid fa-ticket text-sm"></i>
+                        </div>
+
+                        <div>
+
+                            <p
+                                class="text-xs text-text-secondary"
+                            >
+                                Total Service Requests
+                            </p>
+
+                            <p
+                                id="categoryTotalRequests"
+                                class="mt-0.5 text-lg font-bold text-heading"
+                            >
+                                0
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <i
+                        class="fa-solid fa-chart-line text-sm text-text-muted"
+                    ></i>
+
+                </div>
+
+            </div>
+
+        </form>
+
+
+
+        <div
+            id="categoryView"
+            class="hidden overflow-y-auto bg-background-soft px-5 py-5 sm:px-6 sm:py-6"
+        >
+
+            <div
+                class="mb-4 flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-4"
+            >
+
+                <div
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"
+                >
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+
+                <div class="min-w-0">
+
+                    <p
+                        class="text-xs font-medium uppercase tracking-wide text-text-muted"
+                    >
+                        Service Category
+                    </p>
+
+                    <h3
+                        id="viewCategoryName"
+                        class="mt-0.5 truncate text-base font-bold text-heading"
+                    >
+                        -
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="mb-4 rounded-xl  border border-border bg-surface px-4 py-4">
+
+                <div class="mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-align-left text-xs text-text-muted"></i>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                        Description
+                    </p>
+                </div>
+
+                <p id="viewCategoryDescription"
+                    class="text-sm leading-6 text-text-secondary">
+                    No description available.
+                </p>
+
+            </div>
+
+
+            <div
+                class="grid grid-cols-1 gap-3 sm:grid-cols-2"
+            >
+
+                <!-- Status -->
+                <div
+                    class="rounded-xl border border-border bg-surface px-4 py-4"
+                >
+
+                    <p
+                        class="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted"
+                    >
+                        Status
+                    </p>
+
+                    <div
+                        class="flex items-center gap-3"
+                    >
+
+                        <div
+                            id="viewCategoryStatusIcon"
+                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-success-light text-success"
+                        >
+                            <!-- <i
+                                class="fa-solid fa-circle-check text-sm"
+                            ></i> -->
+                        </div>
+
+                        <p
+                            id="viewCategoryStatus"
+                            class="text-sm font-bold text-success"
+                        >
+                            Active
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="rounded-xl border border-border bg-surface px-4 py-4"
+                >
+
+                    <p
+                        class="mb-3 text-xs font-semibold uppercase tracking-wide text-text-muted"
+                    >
+                        Total Requests
+                    </p>
+
+                    <div
+                        class="flex items-center gap-3"
+                    >
+
+                        <div
+                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft text-accent"
+                        >
+                            <i
+                                class="fa-solid fa-ticket text-sm"
+                            ></i>
+                        </div>
+
+                        <p
+                            id="viewCategoryRequests"
+                            class="text-lg font-bold text-heading"
+                        >
+                            0
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="categoryFormFooter"
+            class="flex flex-col-reverse gap-2.5 border-t border-border-light bg-surface px-5 py-4 sm:flex-row sm:justify-end sm:px-6"
+        >
+
+            <button
+                type="button"
+                id="cancelCategoryModal"
+                class=" cursor-pointer w-full rounded-xl border border-border bg-surface px-5 py-2.5 text-sm font-semibold text-text-secondary transition-all duration-200 hover:border-border-dark hover:bg-surface-soft hover:text-text-primary focus:outline-none focus:ring-4 focus:ring-accent-soft sm:w-auto"
+            >
+                Cancel
+            </button>
+
+
+            <button
+                type="submit"
+                id="saveCategoryButton"
+                form="categoryForm"
+                class=" cursor-pointer inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-admin-sm transition-all duration-200 hover:bg-accent-dark hover:shadow-admin focus:outline-none focus:ring-4 focus:ring-accent-soft sm:w-auto"
+            >
+
+                <i class="fa-solid fa-check text-xs"></i>
+
+                <span id="saveCategoryText">
+                    Create Category
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,185 @@
+@import "tailwindcss";
+
+@theme {
+  /* ========================================
+     TYPOGRAPHY
+     ======================================== */
+
+  --font-admin:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+
+  --color-brand:#40595A;
+  --color-brand-dark: #526D6E;
+  --color-brand-deep: #6B8485;
+  --color-brand-light: #829C9C;
+  --color-brand-soft: #E3EFF0;
+  --color-brand-muted: #B4CED2;
+
+
+  /* ========================================
+     ACCENT — SOFT BLUE TEAL
+     ======================================== */
+
+  --color-accent: #97ADB2;
+  --color-accent-dark: #6B8485;
+  --color-accent-light: #C2EAF0;
+  --color-accent-soft: #EEF7F8;
+
+
+  /* ========================================
+     BACKGROUND
+     ======================================== */
+
+  --color-background: #F4F8F8;
+  --color-background-soft: #EAF1F2;
+
+
+  /* ========================================
+     SURFACE
+     ======================================== */
+
+  --color-surface: #FFFFFF;
+  --color-surface-soft: #F8FAFA;
+
+
+  /* ========================================
+     TEXT
+     ======================================== */
+
+  --color-text-primary: #263738;
+  --color-text-secondary: #536668;
+  --color-text-muted: #78898B;
+  --color-text-light: #A7B5B6;
+
+
+  /* ========================================
+     BORDERS
+     ======================================== */
+
+  --color-border: #D3DFE0;
+  --color-border-light: #E6EEEE;
+  --color-border-dark: #B8C9CA;
+
+
+  /* ========================================
+     STATUS
+     ======================================== */
+
+  /* Success */
+  --color-success: #4F806F;
+  --color-success-light: #EAF4F0;
+  --color-success-dark: #386556;
+
+
+  /* Warning */
+  --color-warning: #B78A4A;
+  --color-warning-light: #FBF5E9;
+  --color-warning-dark: #8F682F;
+
+
+  /* Danger */
+  --color-danger: #B96868;
+  --color-danger-light: #FBEFEF;
+  --color-danger-dark: #964F4F;
+
+
+  /* Info */
+  --color-info: #638A98;
+  --color-info-light: #EDF5F7;
+
+
+  /* ========================================
+     SIDEBAR
+     ======================================== */
+
+  --color-sidebar-start: #40595A;
+  --color-sidebar-middle: #526D6E;
+  --color-sidebar-end: #6B8485;
+
+  --color-sidebar-text: #FFFFFF;
+  --color-sidebar-muted: #C2D2D3;
+
+  --color-sidebar-hover:
+    rgb(255 255 255 / 0.08);
+
+  --color-sidebar-active:
+    rgb(194 234 240 / 0.16);
+
+  --color-sidebar-border:
+    rgb(255 255 255 / 0.12);
+
+
+  /* ========================================
+     FORM
+     ======================================== */
+
+  --color-input-background: #FFFFFF;
+  --color-input-border: #D3DFE0;
+  --color-input-focus: #6B8485;
+  --color-input-placeholder: #78898B;
+
+
+  /* ========================================
+     MODAL
+     ======================================== */
+
+  --color-overlay:
+    rgb(38 55 56 / 0.42);
+
+  --color-modal-background: #FFFFFF;
+
+
+  /* ========================================
+     RADIUS
+     ======================================== */
+
+  --radius-admin-sm: 0.5rem;
+  --radius-admin: 0.75rem;
+  --radius-admin-lg: 1rem;
+  --radius-admin-xl: 1.5rem;
+
+
+  /* ========================================
+     SHADOWS
+     ======================================== */
+
+  --shadow-admin-sm:
+    0 2px 8px rgb(64 89 90 / 0.06);
+
+  --shadow-admin:
+    0 8px 30px rgb(64 89 90 / 0.10);
+
+  --shadow-admin-hover:
+    0 8px 30px rgb(82, 109, 110);
+
+  --shadow-admin-md:
+    0 12px 35px rgb(64 89 90 / 0.12);
+
+
+  --shadow-admin-lg: 0 8px 50px rgb(82, 109, 110);
+}
+
+
+@layer base {
+  html {
+    font-family: var(--font-admin);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+  }
+}

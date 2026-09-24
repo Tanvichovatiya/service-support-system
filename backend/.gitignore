@@ -1,0 +1,19 @@
+node_modules/
+.env
+uploads/
+logs/
+.DS_Store
+!.env.example
+
+src/seed
+
+
+# Build / cache
+dist/
+build/
+.cache/
+.eslintcache
+
+# Uploads
+public/uploads/
+uploads/

@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+        />
+
+        <title>Service Requests</title>
+
+        <link
+            rel="stylesheet"
+            href="/css/output.css"
+        />
+
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css"
+            integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+
+        <%- include("../../partials/toast") %>
+
+     
+    </head>
+
+    <body class="bg-page-background font-admin text-text antialiased">
+    
+        <div class="flex h-screen flex-col overflow-hidden md:flex-row">
+      
+            <%- include("../../partials/sidebar") %>
+
+    
+            <main class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+             
+                <header class="shrink-0 border-b border-border bg-accent-soft">
+                    <div class="flex items-center justify-between px-4 py-5 sm:px-6">
+                        <div>
+                            <p class="text-sm font-medium text-brand">
+                                Service Management
+                            </p>
+
+                            <h1 class="mt-1 text-2xl font-bold text-brand">
+                                Service Requests
+                            </h1>
+
+                            <p class="mt-1 text-sm text-text-muted">
+                                Manage, assign and track service requests
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                             <button type="button" id="openCreateRequest" class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-admin bg-brand px-5 py-3 text-sm font-semibold text-white transition hover:shadow-admin-hover ">
+                                <i class="fa-solid fa-plus"></i>
+                                Create Request
+                        </button>
+                                     
+                        <button type="button" id="exportBtn" onclick="exportReport()"class="inline-flex items-center gap-2 border-[1.5px] border-brand rounded-admin bg-accent-soft px-4 py-2 text-brand cursor-pointer hover:shadow-admin-hover">
+                            <i class="fa-solid fa-file-excel"></i>
+                           <span id="exportText">Export Report</span>
+                       </button>
+                        </div>
+          
+                    </div>
+                </header>
+
+                <section class="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8">
+                    <div
+                        class="overflow-hidden rounded-admin-xl   shadow-admin">
+                        
+                        <div
+                            class="border-b border-border bg-card px-4 py-5 sm:px-6"
+                        >
+                            <form method="GET" action="/admin/servicerequest" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
+                                
+                                <div class="md:col-span-2 xl:col-span-5">
+                                    <label
+                                        for="search"
+                                        class="mb-2 block text-sm font-medium text-text-primary"
+                                    >
+                                        Search
+                                    </label>
+
+                                    <div class="relative">
+                                        <span
+                                            class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-text-muted"
+                                        >
+                                            <i
+                                                class="fa-solid fa-magnifying-glass"
+                                            ></i>
+                                        </span>
+
+                                        <input
+                                            id="search"
+                                            type="text"
+                                            name="search"
+                                            value="<%= query.search || '' %>"
+                                            placeholder="Search title, user, email, category..."
+                                            class="h-11 w-full rounded-admin border-[1.4px] border-brand-light bg-page-background pl-10 pr-11 text-sm text-text-primary outline-none transition placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand/10 hover:shadow-admin-hover"
+                                        />
+
+                                        <% if (query.search) { %>
+                                        <button
+                                            type="button"
+                                            id="clearSearch"
+                                            class="absolute inset-y-0 right-0 flex items-center px-3 text-text-muted transition hover:text-text-primary"
+                                            aria-label="Clear search"
+                                        >
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                        <% } %>
+                                    </div>
+                                </div>
+
+                                <div class="xl:col-span-2">
+                                    <label
+                                        for="status"
+                                        class="mb-2 block text-sm font-medium text-text-primary"
+                                    >
+                                        Status
+                                    </label>
+
+                                    <div class="relative">
+                                        <select
+                                            id="status"
+                                            name="status"
+                                            class="h-11 w-full appearance-none rounded-admin border-[1.4px] border-brand-light bg-page-background px-4 pr-10 text-sm text-text-primary outline-none transition  focus:border-brand focus:ring-2 focus:ring-brand/10 hover:shadow-admin-hover"
+                                        >
+                                            <option value="">
+                                                All Status
+                                            </option>
+
+                                            <option
+                                                value="pending"
+                                                <%= query.status === "pending" ? "selected" : "" %>
+                                            >
+                                                Pending
+                                            </option>
+
+                                            <option
+                                                value="assigned"
+                                                <%= query.status === "assigned" ? "selected" : "" %>
+                                            >
+                                                Assigned
+                                            </option>
+
+                                            <option
+                                                value="in_progress"
+                                                <%= query.status === "in_progress" ? "selected" : "" %>
+                                            >
+                                                In Progress
+                                            </option>
+
+                                            <option
+                                                value="completed"
+                                                <%= query.status === "completed" ? "selected" : "" %>
+                                            >
+                                                Completed
+                                            </option>
+                                        </select>
+
+                                        <i
+                                            class="fa-solid fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted"
+                                        ></i>
+                                    </div>
+                                </div>
+
+                               
+                                <div class="xl:col-span-2">
+                                    <label
+                                        for="priority"
+                                        class="mb-2 block text-sm font-medium text-text-primary"
+                                    >
+                                        Priority
+                                    </label>
+
+                                    <div class="relative">
+                                        <select
+                                            id="priority"
+                                            name="priority"
+                                            class="h-11 w-full appearance-none rounded-admin border-[1.4px] border-brand-light bg-page-background px-4 pr-10 text-sm text-text-primary outline-none transition  focus:border-brand focus:ring-2 focus:ring-brand/10 hover:shadow-admin-hover"
+                                        >
+                                            <option value="">
+                                                All Priority
+                                            </option>
+
+                                            <option
+                                                value="low"
+                                                <%= query.priority === "low" ? "selected" : "" %>
+                                            >
+                                                Low
+                                            </option>
+
+                                            <option
+                                                value="medium"
+                                                <%= query.priority === "medium" ? "selected" : "" %>
+                                            >
+                                                Medium
+                                            </option>
+
+                                            <option
+                                                value="high"
+                                                <%= query.priority === "high" ? "selected" : "" %>
+                                            >
+                                                High
+                                            </option>
+
+                                            <option
+                                                value="urgent"
+                                                <%= query.priority === "urgent" ? "selected" : "" %>
+                                            >
+                                                Urgent
+                                            </option>
+                                        </select>
+
+                                        <i
+                                            class="fa-solid fa-chevron-down pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted"
+                                        ></i>
+                                    </div>
+                                </div>
+
+                             
+                                <div
+                                    class="flex gap-2 md:col-span-2 xl:col-span-3"
+                                >
+                                    <button
+                                        type="submit"
+                                        class="inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-admin bg-brand px-4 text-sm font-semibold text-white  transition hover:bg-brand-dark"
+                                    >
+                                        <i class="fa-solid fa-filter"></i>
+                                        Apply
+                                    </button>
+
+                                    <a
+                                        href="/admin/servicerequest"
+                                        class="inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-admin border border-border bg-card px-4 text-sm font-semibold text-text-secondary transition hover:bg-accent-soft"
+                                    >
+                                        <i class="fa-solid fa-rotate-left"></i>
+                                        Reset
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+
+                   
+                        <div class="overflow-x-auto ">
+                            <table class="w-full min-w-[1500px] ">
+                                <thead>
+                                    <tr class="bg-table-header">
+                                        <th
+                                            class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            Request
+                                        </th>
+
+                                        <th
+                                            class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            User
+                                        </th>
+
+                                        <th
+                                            class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            Category
+                                        </th>
+
+                                        <th
+                                            class="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            Priority
+                                        </th>
+
+                                        <th
+                                            class="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            Status
+                                        </th>
+
+                                        <th
+                                            class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            Assigned Staff
+                                        </th>
+
+                                        <th
+                                            class="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            Comment
+                                        </th>
+
+                                        <th
+                                            class="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                        >
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                <tbody class="divide-y divide-table-border">
+                                    <% if (!requests || requests.length === 0) { %>
+                                    <tr>
+                                        <td
+                                            colspan="8"
+                                            class="px-6 py-16 text-center"
+                                        >
+                                            <div
+                                                class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 text-brand"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-ticket text-xl"
+                                                ></i>
+                                            </div>
+
+                                            <p
+                                                class="mt-4 font-semibold text-text-primary"
+                                            >
+                                                No service requests found
+                                            </p>
+
+                                            <p
+                                                class="mt-1 text-sm text-text-muted"
+                                            >
+                                                Try changing your search or filters.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    <% } else { %> <% requests.forEach((request) => {
+                                    %>
+
+                                    <tr
+                                        class="bg-table-row transition hover:bg-table-row-hover"
+                                    >
+                                        <!-- Request -->
+                                        <td class="px-5 py-4">
+                                            <div
+                                                class="flex items-start gap-3"
+                                            >
+                                                <div
+                                                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand"
+                                                >
+                                                    <i
+                                                        class="fa-solid fa-ticket"
+                                                    ></i>
+                                                </div>
+
+                                                <div class="min-w-0">
+                                                    <p
+                                                        class="max-w-[260px] truncate font-semibold text-text-primary"
+                                                        title="<%= request.title %>"
+                                                    >
+                                                        <%= request.title %>
+                                                    </p>
+
+                                                    <p
+                                                        class="mt-1 text-xs text-text-muted"
+                                                    >
+                                                        <i
+                                                            class="fa-regular fa-calendar mr-1"
+                                                        ></i>
+
+                                                        <%=
+                                                        new
+                                                        Date(request.createdAt).toLocaleDateString()
+                                                        %>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- User -->
+                                        <td class="px-5 py-4">
+                                            <% if (request.user) { %>
+
+                                            <div
+                                                class="flex items-center gap-3"
+                                            >
+                                                <% if (request.user.profilePic)
+                                                { %>
+
+                                                <img
+                                                    src="<%= request.user.profilePic %>"
+                                                    alt="User"
+                                                    class="h-9 w-9 shrink-0 rounded-full object-cover"
+                                                />
+
+                                                <% } else { %>
+
+                                                <div
+                                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand/10 text-sm font-semibold text-brand"
+                                                >
+                                                    <%=
+                                                    (request.user.firstname ||
+                                                    "U").charAt(0).toUpperCase()
+                                                    %>
+                                                </div>
+
+                                                <% } %>
+
+                                                <div class="min-w-0">
+                                                    <p
+                                                        class="font-medium text-text-primary"
+                                                    >
+                                                        <%=
+                                                        request.user.firstname ||
+                                                        "" %> <%=
+                                                        request.user.lastname ||
+                                                        "" %>
+                                                    </p>
+
+                                                    <p
+                                                        class="max-w-[180px] truncate text-xs text-text-muted"
+                                                        title="<%= request.user.email || '' %>"
+                                                    >
+                                                        <%=
+                                                        request.user.email ||
+                                                        "-" %>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <% } else { %>
+
+                                            <span
+                                                class="text-sm text-text-muted"
+                                            >
+                                                Unknown User
+                                            </span>
+
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Category -->
+                                        <td class="px-5 py-4">
+                                            <% if (request.category) { %>
+
+                                            <div
+                                                class="flex items-center gap-2"
+                                            >
+                                                <div
+                                                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand"
+                                                >
+                                                    <i
+                                                        class="fa-solid fa-layer-group text-xs"
+                                                    ></i>
+                                                </div>
+
+                                                <div>
+                                                    <p
+                                                        class="font-medium text-text-primary"
+                                                    >
+                                                        <%=
+                                                        request.category.name %>
+                                                    </p>
+
+                                                    <% if
+                                                    (request.category.isActive) {
+                                                    %>
+
+                                                    <span
+                                                        class="text-xs text-success-dark"
+                                                    >
+                                                        Active
+                                                    </span>
+
+                                                    <% } else { %>
+
+                                                    <span
+                                                        class="text-xs text-danger-dark"
+                                                    >
+                                                        Inactive
+                                                    </span>
+
+                                                    <% } %>
+                                                </div>
+                                            </div>
+
+                                            <% } else { %>
+
+                                            <span
+                                                class="text-sm text-text-muted"
+                                            >
+                                                -
+                                            </span>
+
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Priority -->
+                                        <td
+                                            class="px-5 py-4 text-center"
+                                        >
+                                            <% if (request.priority ===
+                                            "urgent") { %>
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-danger-light px-3 py-1 text-xs font-semibold text-danger-dark"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-triangle-exclamation"
+                                                ></i>
+                                                Urgent
+                                            </span>
+
+                                            <% } else if (request.priority ===
+                                            "high") { %>
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-warning-light px-3 py-1 text-xs font-semibold text-warning-dark"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-arrow-up"
+                                                ></i>
+                                                High
+                                            </span>
+
+                                            <% } else if (request.priority ===
+                                            "medium") { %>
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-minus"
+                                                ></i>
+                                                Medium
+                                            </span>
+
+                                            <% } else { %>
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-page-background px-3 py-1 text-xs font-semibold text-text-secondary"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-arrow-down"
+                                                ></i>
+                                                Low
+                                            </span>
+
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Status -->
+                                        <td
+                                            class="px-5 py-4 text-center"
+                                        >
+                                            <% if (request.status === "pending")
+                                            { %>
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-warning-light px-3 py-1 text-xs font-semibold text-warning-dark"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-clock"
+                                                ></i>
+                                                Pending
+                                            </span>
+
+                                            <% } else if (request.status ===
+                                            "assigned") { %>
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-info-light px-3 py-1 text-xs font-semibold text-info-dark"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-user-check"
+                                                ></i>
+                                                Assigned
+                                            </span>
+
+                                            <% } else if (request.status ===
+                                            "in_progress") { %>
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold text-brand"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-spinner"
+                                                ></i>
+                                                In Progress
+                                            </span>
+
+                                            <% } else if (request.status ===
+                                            "completed") { %>
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-success-light px-3 py-1 text-xs font-semibold text-success-dark"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-circle-check"
+                                                ></i>
+                                                Completed
+                                            </span>
+
+                                            <% } else { %>
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-danger-light px-3 py-1 text-xs font-semibold text-danger "
+                                            >
+                                                <%= request.status %>
+                                            </span>
+
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Assigned Staff -->
+                                        <td class="px-5 py-4">
+                                            <% if (request.assignedStaff) { %>
+
+                                            <div
+                                                class="flex items-center gap-3"
+                                            >
+                                                <div
+                                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-info-light text-info"
+                                                >
+                                                    <i
+                                                        class="fa-solid fa-user-tie text-sm"
+                                                    ></i>
+                                                </div>
+
+                                                <div class="min-w-0">
+                                                    <p
+                                                        class="font-medium text-text-primary"
+                                                    >
+                                                        <%=
+                                                        request.assignedStaff.user?.firstname
+                                                        || "" %> <%=
+                                                        request.assignedStaff.user?.lastname
+                                                        || "" %>
+                                                    </p>
+
+                                                    <p
+                                                        class="text-xs text-text-muted"
+                                                    >
+                                                        <%=
+                                                        request.assignedStaff.employeeId
+                                                        || "-" %>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <% } else { %>
+
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full bg-warning-light px-3 py-1 text-xs font-semibold text-warning-dark"
+                                            >
+                                                <i
+                                                    class="fa-solid fa-user-slash"
+                                                ></i>
+                                                Not Assigned
+                                            </span>
+
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Comments -->
+                                        <td
+                                            class="px-5 py-4 text-center"
+                                        >
+                                            <div
+                                                class="flex justify-center gap-2"
+                                            >
+                                                <button
+                                                    type="button"
+                                                    class="add-comment-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-brand transition hover:bg-brand/10"
+                                                    data-id="<%= request._id %>"
+                                                    title="Add Comment"
+                                                >
+                                                    <i
+                                                        class="fa-solid fa-comment-medical"
+                                                    ></i>
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    class="view-comments-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-info transition hover:bg-info-light"
+                                                    data-id="<%= request._id %>"
+                                                    title="View Comments"
+                                                >
+                                                    <i
+                                                        class="fa-solid fa-comments"
+                                                    ></i>
+                                                </button>
+                                            </div>
+                                        </td>
+
+                                       
+                                        <td class="px-5 py-4">
+                                            <div
+                                                class="flex justify-end gap-2"
+                                            >
+                                                <!-- View -->
+                                                <a
+                                                    href="/admin/servicerequest/<%= request._id %>"
+                                                    class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-info transition hover:bg-info-light"
+                                                    title="View Request"
+                                                >
+                                                    <i
+                                                        class="fa-solid fa-eye"
+                                                    ></i>
+                                                </a>
+
+                                                <!-- Assign / Reassign -->
+                                                <% if (request.status ===
+                                                "pending") { %>
+
+                                                <button
+                                                    type="button"
+                                                    class="assign-staff-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-brand transition hover:bg-brand/10"
+                                                    data-id="<%= request._id %>"
+                                                    title="Assign Staff"
+                                                >
+                                                    <i
+                                                        class="fa-solid fa-user-plus"
+                                                    ></i>
+                                                </button>
+
+                                                <% } else { %>
+
+                                                <button
+                                                    type="button"
+                                                    class="reassign-staff-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-warning-dark transition hover:bg-warning-light"
+                                                    data-id="<%= request._id %>"
+                                                    title="Reassign Staff"
+                                                >
+                                                    <i
+                                                        class="fa-solid fa-user-gear"
+                                                    ></i>
+                                                </button>
+
+                                                <% } %>
+
+                                                <!-- Update Status -->
+                                                <button
+                                                    type="button"
+                                                    class="update-status-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-success-dark transition hover:bg-success-light"
+                                                    data-id="<%= request._id %>"
+                                                    data-status="<%= request.status %>"
+                                                    title="Update Status"
+                                                >
+                                                    <i
+                                                        class="fa-solid fa-arrows-rotate"
+                                                    ></i>
+                                                </button>
+
+                                                <button class="delete-req-btn flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-danger transition hover:bg-danger-light  "  data-id="<%= request._id %>" title="Delete Request" >
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+
+                                    <% }); %> <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <%- include("../../partials/pagination", { pagination,
+                        query, baseUrl }) %>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <%- include("assignStaff") %>
+        <%- include("updateReqStatus") %>
+        <%- include("addComment") %>
+        <%- include("viewComment") %>
+        <%- include("createRequest") %>
+        <%- include("reassignStaff") %>
+
+           <script>
+  async function exportReport() {
+    const btn = document.getElementById("exportBtn");
+    const text = document.getElementById("exportText");
+
+    btn.disabled = true;
+    text.textContent = "Generating...";
+
+    try {
+      const response = await fetch(
+        "/admin/servicerequest/exportreport",{
+            method:"POST"
+        }
+      );
+
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "service-request-report.xlsx";
+
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error(error);
+      alert("Failed to export report");
+    } finally {
+      btn.disabled = false;
+      text.textContent = "Export Report";
+    }
+  }
+</script>
+
+        <script src="/js/serviceReq.js"></script>
+        <script src="/js/updateReqStatus.js"></script>
+        <script src="/js/addComment.js"></script>
+        <script src="/js/viewComment.js"></script>
+        <script src="/js/createRequest.js"></script>
+        <script src="/js/reassign.js"></script>
+
+        <script src="/js/adminNotification.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/adminSocket.js"></script>
+
+<script src="/js/adminNotificationPage.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    AdminNotification.getUnreadCount();
+  });
+</script>
+     
+    </body>
+</html>

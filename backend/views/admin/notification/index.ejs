@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notification page</title>
+    <link rel="stylesheet" href="/css/output.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css"
+      integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <%- include('../../partials/toast') %>
+  </head>
+  <body class="bg-page-background font-admin text-text antialiased">
+    <div class="flex h-screen flex-col md:flex-row">
+      <%- include('../../partials/sidebar') %>
+      <main class="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+        <div class="p-6">
+          <div class="mb-6 flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold text-text">Notifications</h1>
+
+              <p class="mt-1 text-sm text-gray-500">
+                Your unread notifications
+              </p>
+            </div>
+
+            <button
+              id="markAllNotificationsRead"
+              type="button"
+              class="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-dark cursor-pointer"
+            >
+              Mark all as read
+            </button>
+          </div>
+
+          <div id="notificationList" class="space-y-3 mx-auto">
+            <div class="py-10 text-center text-sm text-gray-500">
+              Loading notifications...
+            </div>
+          </div>
+
+          <div id="notificationPagination"></div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/js/adminNotification.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/adminSocket.js"></script>
+
+    <script src="/js/adminNotificationPage.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        AdminNotification.getUnreadCount();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <title>User Details</title>
+
+  <link
+    rel="stylesheet"
+    href="/css/output.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css"
+    integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+<%- include('../../partials/toast') %>
+
+
+</head>
+
+<body class="bg-page-background font-admin text-text-primary antialiased">
+
+
+<%
+const currentUser = data || {};
+
+const firstname = currentUser.firstname || "";
+const lastname = currentUser.lastname || "";
+
+const fullName = `${firstname} ${lastname}`.trim() || "Unknown User";
+
+const initials =
+  `${firstname.charAt(0)}${lastname.charAt(0)}`.toUpperCase() || "US";
+
+const totalRequests = Number(currentUser.totalServiceRequests || 0);
+const pendingRequests = Number(currentUser.pendingRequests || 0);
+const assignedRequests = Number(currentUser.assignedRequests || 0);
+const inProgressRequests = Number(currentUser.inProgressRequests || 0);
+const completedRequests = Number(currentUser.completedRequests || 0);
+const cancelledRequests = Number(currentUser.cancelledRequests || 0);
+
+const getDate = (date) => {
+  if (!date) return "-";
+
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const getPercentage = (value) => {
+  if (!totalRequests) return 0;
+
+  return Math.round((value / totalRequests) * 100);
+};
+%>
+
+<div class="flex h-screen flex-col overflow-hidden md:flex-row">
+
+<%- include('../../partials/sidebar') %>
+
+
+  <main class="flex min-w-0 flex-1 flex-col overflow-hidden">
+
+  <header class="shrink-0 border-b border-border bg-surface">
+
+  <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
+
+    <div class="flex items-center justify-between gap-4">
+
+      <div class="min-w-0">
+
+        <div class="flex items-center gap-2">
+
+          <div
+            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand"
+          >
+            <i class="fa-solid fa-user text-sm"></i>
+          </div>
+
+          <span
+            class="truncate text-xs font-semibold uppercase tracking-wide text-brand"
+          >
+            Administration
+          </span>
+
+        </div>
+
+        <h1
+          class="mt-2 text-xl font-bold tracking-tight text-heading sm:text-2xl lg:text-3xl"
+        >
+          User Details
+        </h1>
+
+        <p
+          class="mt-1 max-w-xl text-xs leading-5 text-text-muted sm:text-sm"
+        >
+          View user information and service request activity.
+        </p>
+
+      </div>
+
+    
+      <a
+        href="/admin/user"
+        class="inline-flex shrink-0 items-center gap-2 rounded-admin border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text-secondary transition hover:border-brand hover:bg-brand-soft hover:text-brand"
+      >
+        <i class="fa-solid fa-arrow-left"></i>
+        <span class="hidden sm:inline">Back to Users</span>
+      </a>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+<section
+  class="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8"
+>
+
+  <div class="mx-auto max-w-7xl">
+
+
+    <div class="overflow-hidden rounded-admin-lg border border-border bg-surface shadow-admin-sm">
+
+      <div class="p-5 sm:p-6 lg:p-7">
+
+        <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+
+         
+          <div class="flex items-center gap-4">
+
+            <div
+              class="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-brand text-2xl font-bold text-white shadow-admin-sm"
+            >
+              <%= initials %>
+            </div>
+
+            
+            <div class="min-w-0">
+
+              <div class="flex flex-wrap items-center gap-2">
+
+                <h2
+                  class="text-xl font-bold text-heading sm:text-2xl"
+                >
+                  <%= fullName %>
+                </h2>
+
+                <% if (
+                  currentUser.accountStatus === "ACTIVE" ||
+                  currentUser.isActive === true
+                ) { %>
+
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-full bg-success-light px-3 py-1 text-xs font-semibold text-success"
+                  >
+                    <span
+                      class="h-1.5 w-1.5 rounded-full bg-success"
+                    ></span>
+                    Active
+                  </span>
+
+                <% } else { %>
+
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-full bg-danger-light px-3 py-1 text-xs font-semibold text-danger"
+                  >
+                    <span
+                      class="h-1.5 w-1.5 rounded-full bg-danger"
+                    ></span>
+                    Inactive
+                  </span>
+
+                <% } %>
+
+              </div>
+
+              <p
+                class="mt-1 flex items-center gap-2 text-sm text-text-muted"
+              >
+                <i class="fa-solid fa-envelope text-xs"></i>
+                <%= currentUser.email || "No email" %>
+              </p>
+
+              <p
+                class="mt-1 flex items-center gap-2 text-xs text-text-muted"
+              >
+                <i class="fa-solid fa-calendar text-xs"></i>
+                Joined <%= getDate(currentUser.createdAt) %>
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div
+            class="flex items-center gap-3 rounded-admin border border-border bg-surface-soft px-4 py-3"
+          >
+
+            <div
+              class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 text-brand"
+            >
+              <i class="fa-solid fa-user"></i>
+            </div>
+
+            <div>
+
+              <p class="text-xs font-medium text-text-muted">
+                Account Role
+              </p>
+
+              <p class="mt-0.5 text-sm font-bold text-heading">
+                <%= currentUser.role || "USER" %>
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="mt-6">
+
+      <div class="mb-4">
+
+        <h2 class="text-lg font-bold text-heading">
+          Service Request Overview
+        </h2>
+
+        <p class="mt-1 text-sm text-text-muted">
+          Summary of this user's service requests.
+        </p>
+
+      </div>
+
+
+      <div
+        class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
+
+        
+        <div
+          class="rounded-admin-lg border-[1.5px] border-brand bg-surface p-5 transition hover:shadow-admin-hover"
+        >
+
+          <div class="flex items-center justify-between">
+
+            <div>
+
+              <p class="text-sm font-medium text-text-muted">
+                Total Requests
+              </p>
+
+              <p class="mt-2 text-3xl font-bold text-heading">
+                <%= totalRequests %>
+              </p>
+
+            </div>
+
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand/10 text-brand"
+            >
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="rounded-admin-lg border border-border bg-surface p-5 transition hover:border-warning hover:shadow-admin-hover"
+        >
+
+          <div class="flex items-center justify-between">
+
+            <div>
+
+              <p class="text-sm font-medium text-text-muted">
+                Pending
+              </p>
+
+              <p class="mt-2 text-3xl font-bold text-warning">
+                <%= pendingRequests %>
+              </p>
+
+            </div>
+
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-warning-light text-warning"
+            >
+              <i class="fa-solid fa-clock"></i>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="rounded-admin-lg border border-border bg-surface p-5 transition hover:border-info hover:shadow-admin-hover">
+
+          <div class="flex items-center justify-between">
+
+            <div>
+
+              <p class="text-sm font-medium text-text-muted">
+                Assigned
+              </p>
+
+              <p class="mt-2 text-3xl font-bold text-info">
+                <%= assignedRequests %>
+              </p>
+
+            </div>
+
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-info-light text-info"
+            >
+              <i class="fa-solid fa-user-check"></i>
+            </div>
+
+          </div>
+
+        </div>
+
+
+      
+        <div class="rounded-admin-lg border border-border bg-surface p-5 transition hover:border-brand hover:shadow-admin-hover">
+
+          <div class="flex items-center justify-between">
+
+            <div>
+
+              <p class="text-sm font-medium text-text-muted">
+                In Progress
+              </p>
+
+              <p class="mt-2 text-3xl font-bold text-brand">
+                <%= inProgressRequests %>
+              </p>
+
+            </div>
+
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-brand/10 text-brand">
+              <i class="fa-solid fa-spinner"></i>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="rounded-admin-lg border border-border bg-surface p-5 transition hover:border-success hover:shadow-admin-hover">
+
+          <div class="flex items-center justify-between">
+
+            <div>
+
+              <p class="text-sm font-medium text-text-muted">
+                Completed
+              </p>
+
+              <p class="mt-2 text-3xl font-bold text-success">
+                <%= completedRequests %>
+              </p>
+
+            </div>
+
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-success-light text-success"
+            >
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="rounded-admin-lg border border-border bg-surface p-5 transition hover:border-danger hover:shadow-admin-hover">
+
+          <div class="flex items-center justify-between">
+
+            <div>
+
+              <p class="text-sm font-medium text-text-muted">
+                Cancelled
+              </p>
+
+              <p class="mt-2 text-3xl font-bold text-danger">
+                <%= cancelledRequests %>
+              </p>
+
+            </div>
+
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-danger-light text-danger"
+            >
+              <i class="fa-solid fa-circle-xmark"></i>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+      <div
+        class="rounded-admin-lg border border-border bg-surface shadow-admin-sm"
+      >
+
+        <div class="border-b border-border px-5 py-5 sm:px-6">
+
+          <h2 class="text-lg font-bold text-heading">
+            Request Status
+          </h2>
+
+          <p class="mt-1 text-sm text-text-muted">
+            Breakdown of service requests by status.
+          </p>
+
+        </div>
+
+
+        <div class="space-y-5 p-5 sm:p-6">
+
+
+          <div>
+
+            <div class="mb-2 flex items-center justify-between">
+
+              <div class="flex items-center gap-2">
+
+                <span class="h-2.5 w-2.5 rounded-full bg-warning"></span>
+
+                <span class="text-sm font-medium text-heading">
+                  Pending
+                </span>
+
+              </div>
+
+              <span class="text-sm font-semibold text-text-secondary">
+                <%= pendingRequests %>
+              
+              </span>
+
+            </div>
+
+            <div class="h-2 overflow-hidden rounded-full bg-warning-light">
+
+              <div
+                class="h-full rounded-full bg-warning"
+                style="width: <%= getPercentage(pendingRequests) %>%"
+              ></div>
+
+            </div>
+
+          </div>
+
+
+          <div>
+
+            <div class="mb-2 flex items-center justify-between">
+
+              <div class="flex items-center gap-2">
+
+                <span class="h-2.5 w-2.5 rounded-full bg-info"></span>
+
+                <span class="text-sm font-medium text-heading">
+                  Assigned
+                </span>
+
+              </div>
+
+              <span class="text-sm font-semibold text-text-secondary">
+                <%= assignedRequests %>
+        
+              </span>
+
+            </div>
+
+            <div class="h-2 overflow-hidden rounded-full bg-info-light">
+
+              <div
+                class="h-full rounded-full bg-info"
+                style="width: <%= getPercentage(assignedRequests) %>%"
+              ></div>
+
+            </div>
+
+          </div>
+
+
+          <div>
+
+            <div class="mb-2 flex items-center justify-between">
+
+              <div class="flex items-center gap-2">
+
+                <span class="h-2.5 w-2.5 rounded-full bg-brand"></span>
+
+                <span class="text-sm font-medium text-heading">
+                  In Progress
+                </span>
+
+              </div>
+
+              <span class="text-sm font-semibold text-text-secondary">
+                <%= inProgressRequests %>
+             
+              </span>
+
+            </div>
+
+            <div class="h-2 overflow-hidden rounded-full bg-brand/10">
+
+              <div
+                class="h-full rounded-full bg-brand"
+                style="width: <%= getPercentage(inProgressRequests) %>%"
+              ></div>
+
+            </div>
+
+          </div>
+
+
+          <div>
+
+            <div class="mb-2 flex items-center justify-between">
+
+              <div class="flex items-center gap-2">
+
+                <span class="h-2.5 w-2.5 rounded-full bg-success"></span>
+
+                <span class="text-sm font-medium text-heading">
+                  Completed
+                </span>
+
+              </div>
+
+              <span class="text-sm font-semibold text-text-secondary">
+                <%= completedRequests %>
+              </span>
+
+            </div>
+
+            <div class="h-2 overflow-hidden rounded-full bg-success-light">
+
+              <div
+                class="h-full rounded-full bg-success"
+                style="width: <%= getPercentage(completedRequests) %>%"
+              ></div>
+
+            </div>
+
+          </div>
+
+
+    
+          <div>
+
+            <div class="mb-2 flex items-center justify-between">
+
+              <div class="flex items-center gap-2">
+
+                <span class="h-2.5 w-2.5 rounded-full bg-danger"></span>
+
+                <span class="text-sm font-medium text-heading">
+                  Cancelled
+                </span>
+
+              </div>
+
+              <span class="text-sm font-semibold text-text-secondary">
+                <%= cancelledRequests %>
+              </span>
+
+            </div>
+
+            <div class="h-2 overflow-hidden rounded-full bg-danger-light">
+
+              <div
+                class="h-full rounded-full bg-danger"
+                style="width: <%= getPercentage(cancelledRequests) %>%"
+              ></div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+    </div>
+
+
+
+    <div
+      class="mt-6 rounded-admin-lg border border-brand/20 bg-brand-soft p-5"
+    >
+
+      <div class="flex items-start gap-3">
+
+        <div
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand"
+        >
+          <i class="fa-solid fa-chart-simple"></i>
+        </div>
+
+        <div>
+
+          <h3 class="font-semibold text-heading">
+            Service Request Summary
+          </h3>
+
+          <p class="mt-1 text-sm leading-6 text-text-secondary">
+            <strong><%= fullName %></strong>
+            has submitted
+            <strong><%= totalRequests %></strong>
+            service request<%= totalRequests === 1 ? "" : "s" %>.
+            <%= completedRequests %>
+            <%= completedRequests === 1 ? "request has" : "requests have" %>
+            been completed.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+  </div>
+
+</section>
+
+
+  </main>
+
+</div>
+
+<script src="/js/adminNotification.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/adminSocket.js"></script>
+
+<script src="/js/adminNotificationPage.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    AdminNotification.getUnreadCount();
+  });
+</script>
+</body>
+</html>
