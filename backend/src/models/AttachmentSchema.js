@@ -29,10 +29,26 @@ const attachmentSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+
+    requestId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ServiceRequest",
+      default: null,
+      index: true,
+    },
+
+    commentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-export default mongoose.model("Attachment", attachmentSchema);
+const Attachment = mongoose.model("Attachment", attachmentSchema);
+
+export default Attachment;

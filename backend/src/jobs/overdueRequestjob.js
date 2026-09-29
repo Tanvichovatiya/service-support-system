@@ -4,7 +4,7 @@ import processPendingOverdueRequest from "./overduceReqServcies.js";
 const startOverdueRequestJob = () => {
 
   cron.schedule(
-    "*/5 * * * *",
+    "*/2 * * * *",
 
     async () => {
       console.log("Pending overdue request cron started");

@@ -2,24 +2,24 @@ import ServiceRequestServices from "../../services/ServiceRequestServices.js";
 import { errorResponse, successResponse } from "../../utils/apiResponse.js";
 import staffServices from "../../services/staffServcies.js";
 import { auditLogServices } from "../../services/auditLogServices.js";
-import notificationServices from "../../services/notificationServices.js";
-import { getIo } from "../../socket/initSocket.js";
-import mongoose from "mongoose";
-import { commentServices } from "../../services/commentServices.js";
-import { attachmentServices } from "../../services/attachmentServices.js";
 import ExcelJS from "exceljs";
 import { userServices } from "../../services/userServices.js";
 import redisServices from "../../services/redis/redisServices.js";
 import { redisKeys } from "../../utils/redisKey.js";
+import { sendReassignmentNotifications } from "../../utils/reassignHelper.js";
+import { buildRegexSearch, getPagination } from "../../utils/queryHelper.js";
+import { toObjectId } from "../../utils/convertToObjectId.js";
+import { sendNotification } from "../../utils/sendNotification.js";
+import { compareStaffIds } from "../../utils/compareStaffIds.js";
 
 export const getAllRequest = async (req, res) => {
-  
   try {
-    let { page = 1, search = "", status, priority } = req.query;
-    const limit = 10;
-    const skip = (page - 1) * limit;
+    const { page, limit, skip } = getPagination(req.query, 8);
+    const { search = "", status, priority } = req.query;
 
-    const matchStage = {};
+    const matchStage = {
+      isDeleted: false,
+    };
 
     if (status) {
       matchStage.status = status;
@@ -28,6 +28,16 @@ export const getAllRequest = async (req, res) => {
     if (priority) {
       matchStage.priority = priority;
     }
+
+    const searchMatch = buildRegexSearch(search, [
+      "title",
+      "description",
+      "category.name",
+      "user.firstname",
+      "user.lastname",
+      "assignedStaff.user.firstname",
+      "assignedStaff.user.lastname",
+    ]);
 
     const aggpipeline = [
       {
@@ -71,7 +81,6 @@ export const getAllRequest = async (req, res) => {
               $project: {
                 _id: 1,
                 name: 1,
-                description: 1,
                 isActive: 1,
               },
             },
@@ -86,19 +95,16 @@ export const getAllRequest = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-
       {
         $lookup: {
           from: "staffs",
-          localField: "assignedStaffId",
+          localField: "assignedStaffIds",
           foreignField: "_id",
           pipeline: [
             {
               $project: {
                 _id: 1,
                 employeeId: 1,
-                department: 1,
-                skills: 1,
                 userId: 1,
               },
             },
@@ -129,94 +135,88 @@ export const getAllRequest = async (req, res) => {
                 preserveNullAndEmptyArrays: true,
               },
             },
+
+            {
+              $project: {
+                _id: 1,
+                employeeId: 1,
+                user: 1,
+              },
+            },
           ],
           as: "assignedStaff",
         },
       },
 
       {
-        $unwind: {
-          path: "$assignedStaff",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-
-      ...(search
-        ? [
+        $lookup: {
+          from: "staffs",
+          localField: "acceptedStaffIds",
+          foreignField: "_id",
+          pipeline: [
             {
-              $match: {
-                $or: [
-                  {
-                    title: {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
+              $project: {
+                _id: 1,
+                employeeId: 1,
+                userId: 1,
+              },
+            },
 
+            {
+              $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
                   {
-                    description: {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-
-                  {
-                    "category.name": {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-
-                  {
-                    "user.firstname": {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-
-                  {
-                    "user.lastname": {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-
-                  {
-                    "assignedStaff.user.firstname": {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-
-                  {
-                    "assignedStaff.user.lastname": {
-                      $regex: search,
-                      $options: "i",
+                    $project: {
+                      _id: 1,
+                      firstname: 1,
+                      lastname: 1,
+                      email: 1,
+                      profilePic: 1,
                     },
                   },
                 ],
+                as: "user",
               },
             },
-          ]
-        : []),
+
+            {
+              $unwind: {
+                path: "$user",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+
+            {
+              $project: {
+                _id: 1,
+                employeeId: 1,
+                user: 1,
+              },
+            },
+          ],
+          as: "acceptedStaff",
+        },
+      },
+      ...(searchMatch ? [{ $match: searchMatch }] : []),
+
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
 
       {
         $facet: {
           data: [
             {
-              $sort: {
-                createdAt: -1,
-              },
-            },
-
-            {
               $skip: skip,
             },
-
             {
               $limit: limit,
             },
-
             {
               $project: {
                 _id: 1,
@@ -226,12 +226,12 @@ export const getAllRequest = async (req, res) => {
                 status: 1,
                 attachments: 1,
                 createdAt: 1,
-
                 user: 1,
-
                 category: 1,
-
                 assignedStaff: 1,
+                assignedStaffIds: 1,
+                acceptedStaff: 1,
+                acceptedStaffIds: 1,
               },
             },
           ],
@@ -248,49 +248,66 @@ export const getAllRequest = async (req, res) => {
     const result = await ServiceRequestServices.getAggData(aggpipeline);
 
     const requests = result[0]?.data || [];
-
     const totalRequests = result[0]?.totalCount[0]?.count || 0;
-
     const totalPages = Math.ceil(totalRequests / limit);
-   
+
     return res.render("admin/servicerequest/index", {
       requests,
+
       pagination: {
         page,
         limit,
         totalItems: totalRequests,
         totalPages,
       },
+
       query: {
         search,
         status,
         priority,
       },
+
       baseUrl: "/admin/servicerequest",
     });
   } catch (error) {
     console.log("err:", error);
-    return errorResponse(res, { statusCode: 500, message: "server err" });
+
+    return errorResponse(res, {
+      statusCode: 500,
+      message: "server err",
+    });
   }
 };
 
 export const getRequestById = async (req, res) => {
   try {
-    console.log("call ");
     const { reqid } = req.params;
 
     const pipeline = [
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(reqid),
+          _id: toObjectId(reqid),
+          isDeleted: false,
         },
       },
+
       {
         $lookup: {
           from: "users",
-          localField: "userId",
-          foreignField: "_id",
+          let: {
+            userId: "$userId",
+          },
           pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$_id", "$$userId"] },
+                    { $eq: ["$isDeleted", false] },
+                  ],
+                },
+              },
+            },
             {
               $project: {
                 _id: 1,
@@ -316,6 +333,16 @@ export const getRequestById = async (req, res) => {
           from: "categories",
           localField: "categoryId",
           foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                // _id: 1,
+                name: 1,
+                // description: 1,
+                // isActive: 1,
+              },
+            },
+          ],
           as: "category",
         },
       },
@@ -326,19 +353,38 @@ export const getRequestById = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-
       {
         $lookup: {
           from: "staffs",
-          localField: "assignedStaffId",
+          localField: "assignedStaffIds",
           foreignField: "_id",
           pipeline: [
             {
+              $project: {
+                _id: 1,
+                userId: 1,
+                employeeId: 1,
+                // department: 1,
+                // skills: 1,
+              },
+            },
+            {
               $lookup: {
                 from: "users",
-                localField: "userId",
-                foreignField: "_id",
+                let: {
+                  userId: "$userId",
+                },
                 pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $eq: ["$_id", "$$userId"] },
+                          { $eq: ["$isDeleted", false] },
+                        ],
+                      },
+                    },
+                  },
                   {
                     $project: {
                       _id: 1,
@@ -352,7 +398,6 @@ export const getRequestById = async (req, res) => {
                 as: "user",
               },
             },
-
             {
               $unwind: {
                 path: "$user",
@@ -365,64 +410,76 @@ export const getRequestById = async (req, res) => {
       },
 
       {
-        $unwind: {
-          path: "$assignedStaff",
-          preserveNullAndEmptyArrays: true,
+        $lookup: {
+          from: "staffs",
+          localField: "acceptedStaffIds",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                userId: 1,
+                employeeId: 1,
+                // department: 1,
+                // skills: 1,
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                let: {
+                  userId: "$userId",
+                },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $eq: ["$_id", "$$userId"] },
+                          { $eq: ["$isDeleted", false] },
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 1,
+                      firstname: 1,
+                      lastname: 1,
+                      email: 1,
+                      profilePic: 1,
+                    },
+                  },
+                ],
+                as: "user",
+              },
+            },
+            {
+              $unwind: {
+                path: "$user",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ],
+          as: "acceptedStaff",
         },
       },
 
       {
         $lookup: {
           from: "attachments",
-          let: {
-            requestId: "$_id",
-          },
+          localField: "_id",
+          foreignField: "requestId",
           pipeline: [
             {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ["$belongsTo", "$$requestId"],
-                    },
-                    {
-                      $eq: ["$belongsToModel", "ServiceRequest"],
-                    },
-                  ],
-                },
-              },
-            },
-
-            {
-              $sort: {
+              $project: {
+                _id: 1,
+                originalName: 1,
+                fileName: 1,
+                filePath: 1,
+                mimeType: 1,
+                size: 1,
                 createdAt: 1,
-              },
-            },
-
-            {
-              $lookup: {
-                from: "users",
-                localField: "uploadedBy",
-                foreignField: "_id",
-                pipeline: [
-                  {
-                    $project: {
-                      _id: 1,
-                      firstname: 1,
-                      lastname: 1,
-                      role: 1,
-                      profilePic: 1,
-                    },
-                  },
-                ],
-                as: "uploader",
-              },
-            },
-
-            {
-              $unwind: {
-                path: "$uploader",
-                preserveNullAndEmptyArrays: true,
               },
             },
           ],
@@ -432,10 +489,20 @@ export const getRequestById = async (req, res) => {
 
       {
         $lookup: {
-          from: "comments",
-          localField: "_id",
-          foreignField: "requestId",
+          from: "auditlogs",
+          let: {
+            requestId: "$_id",
+          },
           pipeline: [
+            {
+              $match: {
+                entity: "ServiceRequest",
+                $expr: {
+                  $eq: ["$entityId", "$$requestId"],
+                },
+              },
+            },
+
             {
               $sort: {
                 createdAt: 1,
@@ -445,107 +512,27 @@ export const getRequestById = async (req, res) => {
             {
               $lookup: {
                 from: "users",
-                localField: "userId",
-                foreignField: "_id",
-                pipeline: [
-                  {
-                    $project: {
-                      _id: 1,
-                      firstname: 1,
-                      lastname: 1,
-                      email: 1,
-                      role: 1,
-                      profilePic: 1,
-                    },
-                  },
-                ],
-                as: "user",
-              },
-            },
-
-            {
-              $unwind: {
-                path: "$user",
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-
-            {
-              $lookup: {
-                from: "attachments",
                 let: {
-                  commentId: "$_id",
+                  userId: "$userId",
                 },
                 pipeline: [
                   {
                     $match: {
                       $expr: {
                         $and: [
-                          {
-                            $eq: ["$belongsTo", "$$commentId"],
-                          },
-                          {
-                            $eq: ["$belongsToModel", "Comment"],
-                          },
+                          { $eq: ["$_id", "$$userId"] },
+                          { $eq: ["$isDeleted", false] },
                         ],
                       },
                     },
                   },
-
-                  {
-                    $sort: {
-                      createdAt: 1,
-                    },
-                  },
-
-                  {
-                    $project: {
-                      _id: 1,
-                      url: 1,
-                      publicId: 1,
-                      uploadedBy: 1,
-                      createdAt: 1,
-                    },
-                  },
-                ],
-                as: "attachments",
-              },
-            },
-          ],
-          as: "comments",
-        },
-      },
-
-      {
-        $lookup: {
-          from: "auditlogs",
-          localField: "_id",
-          foreignField: "entityId",
-          pipeline: [
-            {
-              $match: {
-                entity: "ServiceRequest",
-              },
-            },
-
-            {
-              $sort: {
-                createdAt: -1,
-              },
-            },
-
-            {
-              $lookup: {
-                from: "users",
-                localField: "userId",
-                foreignField: "_id",
-                pipeline: [
                   {
                     $project: {
                       _id: 1,
                       firstname: 1,
                       lastname: 1,
                       role: 1,
+                      profilePic: 1,
                     },
                   },
                 ],
@@ -557,6 +544,16 @@ export const getRequestById = async (req, res) => {
               $unwind: {
                 path: "$actor",
                 preserveNullAndEmptyArrays: true,
+              },
+            },
+
+            {
+              $project: {
+                _id: 1,
+                action: 1,
+                details: 1,
+                createdAt: 1,
+                actor: 1,
               },
             },
           ],
@@ -576,27 +573,31 @@ export const getRequestById = async (req, res) => {
           createdAt: 1,
           updatedAt: 1,
 
-          assignedAt: 1,
-          startedAt: 1,
-          completedAt: 1,
+          // assignedAt: 1,
+          // startedAt: 1,
+          // completedAt: 1,
 
           user: 1,
           category: 1,
+
           assignedStaff: 1,
+          acceptedStaff: 1,
+
+          // assignedStaffIds: 1,
+          // acceptedStaffIds: 1,
 
           attachments: 1,
-
-          comments: 1,
+          // comments: 1,
           history: 1,
         },
       },
     ];
 
     const result = await ServiceRequestServices.getAggData(pipeline);
-
+    console.log("result:", result);
     return res.render("admin/serviceRequest/viewServiceReq", {
       serviceRequest: result[0],
-      title: result[0].title || "Service Request",
+      title: result[0]?.title || "Service Request",
     });
   } catch (error) {
     console.log("getRequestById error:", error);
@@ -612,41 +613,33 @@ export const getRequestById = async (req, res) => {
 export const assignRequest = async (req, res) => {
   try {
     const { reqid } = req.params;
-    const { staffId } = req.body;
+    const { staffIds = [] } = req.body;
     const adminId = req.user.id;
 
     const serviceRequest = await ServiceRequestServices.getdatabyfindOne({
       _id: reqid,
-    });
-
-    if (serviceRequest.status !== "pending") {
-      return errorResponse(res, {
-        statusCode: 400,
-        message: `Request cannot be assigned when status is "${serviceRequest.status}".`,
-      });
-    }
-
-    const staff = await staffServices.getdatabyfindOne({
-      _id: staffId,
       isDeleted: false,
     });
 
-    if (!staff) {
-      return errorResponse(res, {
-        statusCode: 404,
-        message: "Active staff not found",
-      });
-    }
+    const staffList = await staffServices.getData({
+      _id: {
+        $in: staffIds,
+      },
+    });
+
+    const assignedStaffIds = staffList.map((staff) => staff._id);
     const assignedAt = new Date();
 
     await ServiceRequestServices.updateOne(
       {
         _id: reqid,
         status: "pending",
+        isDeleted: false,
       },
       {
         $set: {
-          assignedStaffId: staff._id,
+          assignedStaffIds,
+          acceptedStaffIds: [],
           status: "assigned",
           assignedAt,
         },
@@ -659,12 +652,14 @@ export const assignRequest = async (req, res) => {
       entity: "ServiceRequest",
       entityId: serviceRequest._id,
       oldValue: {
-        assignedStaffId: null,
+        assignedStaffIds: serviceRequest.assignedStaffIds || [],
+        acceptedStaffIds: serviceRequest.acceptedStaffIds || [],
         status: serviceRequest.status,
         assignedAt: serviceRequest.assignedAt || null,
       },
       newValue: {
-        assignedStaffId: staff._id,
+        assignedStaffIds,
+        acceptedStaffIds: [],
         status: "assigned",
         assignedAt,
       },
@@ -672,43 +667,46 @@ export const assignRequest = async (req, res) => {
       userAgent: req.get("user-agent"),
     });
 
-    const staffNotification = await notificationServices.createNotification({
-      receiverId: staff.userId,
-      senderId: adminId,
-      requestId: serviceRequest._id,
-      type: "request_assigned",
-      message: `A new service request "${serviceRequest.title}" has been assigned to you.`,
-    });
+    const staffIdsForEvent = staffList.map((staff) => staff._id);
 
-    const userNotification = await notificationServices.createNotification({
+    for (const staff of staffList) {
+      await sendNotification({
+        receiverId: staff.userId,
+        senderId: adminId,
+        requestId: serviceRequest._id,
+        type: "request_assigned",
+        room: `staff:${staff.userId}`,
+        event: "service-request:assigned",
+        data: {
+          staffId: staff._id,
+          staffIds: staffIdsForEvent,
+          status: "assigned",
+        },
+      });
+    }
+
+    await sendNotification({
       receiverId: serviceRequest.userId,
       senderId: adminId,
       requestId: serviceRequest._id,
       type: "request_assigned",
-      message: `Your service request "${serviceRequest.title}" has been assigned to a staff member.`,
+      room: `user:${serviceRequest.userId}`,
+      event: "service-request:assigned",
+      data: {
+        staffIds: staffIdsForEvent,
+        staffCount: staffList.length,
+        status: "assigned",
+      },
     });
 
-    const io = getIo();
-
-    io.to(`staff:${staff.userId}`).emit("service-request:assigned", {
-      requestId: serviceRequest._id,
-      staffId: staff._id,
-      status: "assigned",
-      notification: staffNotification.notification,
-      unreadCount: staffNotification.unreadCount,
-    });
-    io.to(`user:${serviceRequest.userId}`).emit("service-request:assigned", {
-      requestId: serviceRequest._id,
-      staffId: staff._id,
-      status: "assigned",
-      notification: userNotification.notification,
-      unreadCount: userNotification.unreadCount,
-    });
-     await redisServices.delete(redisKeys.dashboard.stats())
+    await redisServices.delete(redisKeys.dashboard.stats());
 
     return successResponse(res, {
       statusCode: 200,
-      message: "Service request assigned successfully",
+      message: "Service request assigned successfully.",
+      data: {
+        staffIds: staffIdsForEvent,
+      },
     });
   } catch (error) {
     console.log("assignRequest error:", error);
@@ -721,281 +719,6 @@ export const assignRequest = async (req, res) => {
   }
 };
 
-export const reassignRequest = async (req, res) => {
-  try {
-    const { reqid } = req.params;
-    const { staffId } = req.body;
-    const adminId = req.user.id;
-    console.log("staff id:", staffId);
-
-    const serviceRequest = await ServiceRequestServices.getdatabyfindOne({
-      _id: reqid,
-    });
-
-    if (["completed", "cancelled"].includes(serviceRequest.status)) {
-      return errorResponse(res, {
-        statusCode: 400,
-        message: "Completed or cancelled request cannot be reassigned.",
-      });
-    }
-
-    const newStaff = await staffServices.getdatabyfindOne({
-      _id: staffId,
-      isDeleted: false,
-    });
-
-    
-
-    if (
-      serviceRequest.assignedStaffId &&
-      serviceRequest.assignedStaffId.toString() === newStaff._id.toString()
-    ) {
-      return errorResponse(res, {
-        statusCode: 400,
-        message: "Request is already assigned to this staff member.",
-      });
-    }
-
-    const oldStaffId = serviceRequest.assignedStaffId;
-
-    const assignedAt = new Date();
-
-    const updatedRequest = await ServiceRequestServices.updateOne(
-      {
-        _id: reqid,
-      },
-      {
-        $set: {
-          assignedStaffId: newStaff._id,
-          status:
-            serviceRequest.status === "pending"
-              ? "assigned"
-              : serviceRequest.status,
-          assignedAt,
-        },
-      },
-    );
-
-    await auditLogServices.create({
-      userId: adminId,
-      action: "SERVICE_REQUEST_REASSIGNED",
-      entity: "ServiceRequest",
-      entityId: serviceRequest._id,
-      oldValue: {
-        assignedStaffId: oldStaffId,
-        status: serviceRequest.status,
-        assignedAt: serviceRequest.assignedAt || null,
-      },
-      newValue: {
-        assignedStaffId: newStaff._id,
-        status:
-          serviceRequest.status === "pending"
-            ? "assigned"
-            : serviceRequest.status,
-        assignedAt,
-      },
-      ipAddress: req.ip,
-      userAgent: req.get("user-agent"),
-    });
-
-    const io = getIo();
-
-    // 7. Notify old staff
-    if (oldStaffId) {
-      const oldStaff = await staffServices.getdatabyfindOne({
-        _id: oldStaffId,
-      });
-
-      if (oldStaff) {
-        const oldStaffNotification =
-          await notificationServices.createNotification({
-            receiverId: oldStaff.userId,
-            senderId: adminId,
-            requestId: serviceRequest._id,
-            type: "request_reassigned",
-            message: `Service request "${serviceRequest.title}" has been reassigned to another staff member.`,
-          });
-
-        io.to(`staff:${oldStaff.userId}`).emit("service-request:removed", {
-          requestId: serviceRequest._id,
-          staffId: oldStaff._id,
-          notification: oldStaffNotification.notification,
-          unreadCount: oldStaffNotification.unreadCount,
-        });
-      }
-    }
-
-    const newStaffNotification = await notificationServices.createNotification({
-      receiverId: newStaff.userId,
-      senderId: adminId,
-      requestId: serviceRequest._id,
-      type: "request_reassigned",
-      message: `Service request "${serviceRequest.title}" has been assigned to you.`,
-    });
-
-    io.to(`staff:${newStaff.userId}`).emit("service-request:reassigned", {
-      requestId: serviceRequest._id,
-      staffId: newStaff._id,
-      status:
-        serviceRequest.status === "pending"
-          ? "assigned"
-          : serviceRequest.status,
-      notification: newStaffNotification.notification,
-      unreadCount: newStaffNotification.unreadCount,
-    });
-
-    const userNotification = await notificationServices.createNotification({
-      receiverId: serviceRequest.userId,
-      senderId: adminId,
-      requestId: serviceRequest._id,
-      type: "request_reassigned",
-      message: `Your service request "${serviceRequest.title}" has been reassigned to another staff member.`,
-    });
-
-    io.to(`user:${serviceRequest.userId}`).emit("service-request:reassigned", {
-      requestId: serviceRequest._id,
-      staffId: newStaff._id,
-      status:
-        serviceRequest.status === "pending"
-          ? "assigned"
-          : serviceRequest.status,
-      notification: userNotification.notification,
-      unreadCount: userNotification.unreadCount,
-    });
-
-    // io.to("admins").emit("service-request:updated", {
-    //   requestId: serviceRequest._id,
-    //   assignedStaffId: newStaff._id,
-    //   status:
-    //     serviceRequest.status === "pending"
-    //       ? "assigned"
-    //       : serviceRequest.status,
-    // });
-     await redisServices.delete(redisKeys.dashboard.stats())
-    return successResponse(res, {
-      statusCode: 200,
-      message: "Service request reassigned successfully",
-      data: {
-        requestId: serviceRequest._id,
-        oldStaffId,
-        newStaffId: newStaff._id,
-      },
-    });
-  } catch (error) {
-    console.log("reassignRequest error:", error);
-
-    return errorResponse(res, {
-      statusCode: 500,
-      message: "Failed to reassign service request",
-      errors: error.message,
-    });
-  }
-};
-
-export const getRequestComments = async (req, res) => {
-  try {
-    const { reqid } = req.params;
-
-    const comments = await commentServices.getAggData([
-      {
-        $match: {
-          requestId: new mongoose.Types.ObjectId(reqid),
-        },
-      },
-
-      {
-        $lookup: {
-          from: "users",
-          localField: "userId",
-          foreignField: "_id",
-          pipeline: [
-            {
-              $project: {
-                _id: 1,
-                firstname: 1,
-                lastname: 1,
-                role: 1,
-                profilePic: 1,
-              },
-            },
-          ],
-          as: "user",
-        },
-      },
-
-      {
-        $unwind: {
-          path: "$user",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-
-      {
-        $lookup: {
-          from: "attachments",
-          let: {
-            commentId: "$_id",
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ["$belongsTo", "$$commentId"],
-                    },
-                    {
-                      $eq: ["$belongsToModel", "Comment"],
-                    },
-                  ],
-                },
-              },
-            },
-
-            {
-              $sort: {
-                createdAt: 1,
-              },
-            },
-
-            {
-              $project: {
-                _id: 1,
-                url: 1,
-                publicId: 1,
-                uploadedBy: 1,
-                createdAt: 1,
-              },
-            },
-          ],
-          as: "attachments",
-        },
-      },
-
-      {
-        $sort: {
-          createdAt: 1,
-        },
-      },
-    ]);
-
-    return successResponse(res, {
-      statusCode: 200,
-      message: "Comments fetched successfully",
-      data: {
-        comments,
-      },
-    });
-  } catch (error) {
-    console.log("getRequestComments error:", error);
-
-    return errorResponse(res, {
-      statusCode: 500,
-      message: "Failed to fetch comments",
-      errors: error.message,
-    });
-  }
-};
 export const updateRequestStatus = async (req, res) => {
   try {
     const { reqid } = req.params;
@@ -1004,12 +727,10 @@ export const updateRequestStatus = async (req, res) => {
     const userId = req.user.id;
     const role = req.user.role;
 
-    const serviceRequest =
-      await ServiceRequestServices.getdatabyfindOne({
-        _id: reqid,
-      });
-
-   
+    const serviceRequest = await ServiceRequestServices.getdatabyfindOne({
+      _id: reqid,
+      isDeleted: false,
+    });
 
     const currentStatus = serviceRequest.status;
 
@@ -1025,8 +746,7 @@ export const updateRequestStatus = async (req, res) => {
       },
     };
 
-    const allowedStatuses =
-      allowedTransitions[role]?.[currentStatus] || [];
+    const allowedStatuses = allowedTransitions[role]?.[currentStatus] || [];
 
     if (!allowedStatuses.includes(status)) {
       return errorResponse(res, {
@@ -1055,10 +775,11 @@ export const updateRequestStatus = async (req, res) => {
       {
         _id: reqid,
         status: currentStatus,
+        isDeleted: false,
       },
       {
         $set: updateData,
-      }
+      },
     );
 
     await auditLogServices.create({
@@ -1066,93 +787,74 @@ export const updateRequestStatus = async (req, res) => {
       action: "SERVICE_REQUEST_STATUS_CHANGED",
       entity: "ServiceRequest",
       entityId: serviceRequest._id,
-
       oldValue: {
         status: currentStatus,
       },
-
       newValue: {
         status,
       },
-
       ipAddress: req.ip,
       userAgent: req.get("user-agent"),
     });
 
-    const io = getIo();
-
-    const admin = await userServices.getdatabyfindOne({
-      role: "admin",
-      isActive: true,
-    });
-
     if (role !== "user") {
-      const userNotification =
-        await notificationServices.createNotification({
-          receiverId: serviceRequest.userId,
+      await sendNotification({
+        receiverId: serviceRequest.userId,
+        senderId: userId,
+        requestId: serviceRequest._id,
+        type: "status_changed",
+        room: `user:${serviceRequest.userId}`,
+        event: "service-request:status-updated",
+        data: {
+          status,
+          recipientType: "user",
+        },
+      });
+    }
+
+    if (role !== "staff" && serviceRequest.assignedStaffIds?.length) {
+      const staffList = await staffServices.getData({
+        _id: {
+          $in: serviceRequest.assignedStaffIds,
+        },
+      });
+
+      for (const staff of staffList) {
+        await sendNotification({
+          receiverId: staff.userId,
           senderId: userId,
           requestId: serviceRequest._id,
           type: "status_changed",
-          message: `Your service request "${serviceRequest.title}" status changed to "${status}".`,
-        });
-
-      io.to(`user:${serviceRequest.userId}`).emit(
-        "service-request:status-updated",
-        {
-          requestId: serviceRequest._id,
-          status,
-          notification: userNotification.notification,
-          unreadCount: userNotification.unreadCount,
-        }
-      );
-    }
-
-    if (role !== "staff" && serviceRequest.assignedStaffId) {
-      const staff = await staffServices.getdatabyfindOne({
-        _id: serviceRequest.assignedStaffId,
-      });
-
-      if (staff) {
-        const staffNotification =
-          await notificationServices.createNotification({
-            receiverId: staff.userId,
-            senderId: userId,
-            requestId: serviceRequest._id,
-            type: "status_changed",
-            message: `Service request "${serviceRequest.title}" status changed to "${status}".`,
-          });
-
-        io.to(`staff:${staff.userId}`).emit(
-          "service-request:status-updated",
-          {
-            requestId: serviceRequest._id,
+          room: `staff:${staff.userId}`,
+          event: "service-request:status-updated",
+          data: {
             status,
-            notification: staffNotification.notification,
-            unreadCount: staffNotification.unreadCount,
-          }
-        );
+            recipientType: "staff",
+          },
+        });
       }
     }
 
-    if (role !== "admin" && admin) {
-      const adminNotification =
-        await notificationServices.createNotification({
+    if (role !== "admin") {
+      const admin = await userServices.getdatabyfindOne({
+        role: "admin",
+        isDeleted: false,
+      });
+
+      if (admin) {
+        await sendNotification({
           receiverId: admin._id,
           senderId: userId,
           requestId: serviceRequest._id,
           type: "status_changed",
-          message: `Service request "${serviceRequest.title}" status changed to "${status}".`,
+          room: "admins",
+          event: "service-request:status-updated",
+          data: {
+            status,
+            recipientType: "admin",
+          },
         });
-
-      io.to("admins").emit(
-        "service-request:status-updated",
-        {
-          requestId: serviceRequest._id,
-          status,
-          notification: adminNotification.notification,
-          unreadCount: adminNotification.unreadCount,
-        }
-      );
+      }
     }
 
     await redisServices.delete(redisKeys.dashboard.stats());
@@ -1176,10 +878,26 @@ export const exportServiceReqReport = async (req, res) => {
   try {
     const pipeline = [
       {
+        $match: {
+          isDeleted: false,
+        },
+      },
+
+      {
         $lookup: {
           from: "users",
           localField: "userId",
           foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                firstname: 1,
+                lastname: 1,
+                email: 1,
+              },
+            },
+          ],
           as: "user",
         },
       },
@@ -1195,6 +913,14 @@ export const exportServiceReqReport = async (req, res) => {
           from: "categories",
           localField: "categoryId",
           foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+              },
+            },
+          ],
           as: "category",
         },
       },
@@ -1208,30 +934,82 @@ export const exportServiceReqReport = async (req, res) => {
       {
         $lookup: {
           from: "staffs",
-          localField: "assignedStaffId",
+          localField: "assignedStaffIds",
           foreignField: "_id",
-          as: "staff",
-        },
-      },
-      {
-        $unwind: {
-          path: "$staff",
-          preserveNullAndEmptyArrays: true,
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                userId: 1,
+                employeeId: 1,
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      firstname: 1,
+                      lastname: 1,
+                    },
+                  },
+                ],
+                as: "user",
+              },
+            },
+            {
+              $unwind: {
+                path: "$user",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ],
+          as: "assignedStaff",
         },
       },
 
       {
         $lookup: {
-          from: "users",
-          localField: "staff.userId",
+          from: "staffs",
+          localField: "acceptedStaffIds",
           foreignField: "_id",
-          as: "staffUser",
-        },
-      },
-      {
-        $unwind: {
-          path: "$staffUser",
-          preserveNullAndEmptyArrays: true,
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                userId: 1,
+                employeeId: 1,
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      firstname: 1,
+                      lastname: 1,
+                    },
+                  },
+                ],
+                as: "user",
+              },
+            },
+            {
+              $unwind: {
+                path: "$user",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ],
+          as: "acceptedStaff",
         },
       },
 
@@ -1262,6 +1040,7 @@ export const exportServiceReqReport = async (req, res) => {
           title: {
             $ifNull: ["$title", ""],
           },
+
           description: {
             $ifNull: ["$description", ""],
           },
@@ -1274,24 +1053,57 @@ export const exportServiceReqReport = async (req, res) => {
             $ifNull: ["$status", ""],
           },
 
-          staffName: {
-            $trim: {
-              input: {
-                $concat: [
-                  { $ifNull: ["$staffUser.firstname", ""] },
-                  " ",
-                  { $ifNull: ["$staffUser.lastname", ""] },
-                ],
+          assignedStaff: {
+            $map: {
+              input: "$assignedStaff",
+              as: "staff",
+              in: {
+                name: {
+                  $trim: {
+                    input: {
+                      $concat: [
+                        { $ifNull: ["$$staff.user.firstname", ""] },
+                        " ",
+                        { $ifNull: ["$$staff.user.lastname", ""] },
+                      ],
+                    },
+                  },
+                },
+                employeeId: {
+                  $ifNull: ["$$staff.employeeId", ""],
+                },
               },
             },
           },
 
-          employeeId: {
-            $ifNull: ["$staff.employeeId", ""],
+          acceptedStaff: {
+            $map: {
+              input: "$acceptedStaff",
+              as: "staff",
+              in: {
+                name: {
+                  $trim: {
+                    input: {
+                      $concat: [
+                        { $ifNull: ["$$staff.user.firstname", ""] },
+                        " ",
+                        { $ifNull: ["$$staff.user.lastname", ""] },
+                      ],
+                    },
+                  },
+                },
+                employeeId: {
+                  $ifNull: ["$$staff.employeeId", ""],
+                },
+              },
+            },
           },
 
           createdAt: 1,
           updatedAt: 1,
+          assignedAt: 1,
+          startedAt: 1,
+          completedAt: 1,
         },
       },
 
@@ -1349,13 +1161,38 @@ export const exportServiceReqReport = async (req, res) => {
       },
       {
         header: "Assigned Staff",
-        key: "staffName",
+        key: "assignedStaff",
+        width: 35,
+      },
+      {
+        header: "Assigned Employee ID",
+        key: "assignedEmployeeId",
         width: 25,
       },
       {
-        header: "Employee ID",
-        key: "employeeId",
-        width: 18,
+        header: "Accepted Staff",
+        key: "acceptedStaff",
+        width: 35,
+      },
+      {
+        header: "Accepted Employee ID",
+        key: "acceptedEmployeeId",
+        width: 25,
+      },
+      {
+        header: "Assigned At",
+        key: "assignedAt",
+        width: 22,
+      },
+      {
+        header: "Started At",
+        key: "startedAt",
+        width: 22,
+      },
+      {
+        header: "Completed At",
+        key: "completedAt",
+        width: 22,
       },
       {
         header: "Created At",
@@ -1370,6 +1207,9 @@ export const exportServiceReqReport = async (req, res) => {
     ];
 
     requests.forEach((request) => {
+      const assignedStaff = request.assignedStaff || [];
+      const acceptedStaff = request.acceptedStaff || [];
+
       worksheet.addRow({
         title: request.title || "",
         description: request.description || "",
@@ -1378,9 +1218,39 @@ export const exportServiceReqReport = async (req, res) => {
         userEmail: request.userEmail || "",
         priority: request.priority || "",
         status: request.status || "",
-        staffName: request.staffName || "Not Assigned",
-        employeeId: request.employeeId || "",
+
+        assignedStaff:
+          assignedStaff
+            .map((staff) => staff.name)
+            .filter(Boolean)
+            .join(", ") || "Not Assigned",
+
+        assignedEmployeeId:
+          assignedStaff
+            .map((staff) => staff.employeeId)
+            .filter(Boolean)
+            .join(", ") || "",
+
+        acceptedStaff:
+          acceptedStaff
+            .map((staff) => staff.name)
+            .filter(Boolean)
+            .join(", ") || "Not Accepted",
+
+        acceptedEmployeeId:
+          acceptedStaff
+            .map((staff) => staff.employeeId)
+            .filter(Boolean)
+            .join(", ") || "",
+
+        assignedAt: request.assignedAt ? new Date(request.assignedAt) : "",
+
+        startedAt: request.startedAt ? new Date(request.startedAt) : "",
+
+        completedAt: request.completedAt ? new Date(request.completedAt) : "",
+
         createdAt: request.createdAt ? new Date(request.createdAt) : "",
+
         updatedAt: request.updatedAt ? new Date(request.updatedAt) : "",
       });
     });
@@ -1398,8 +1268,10 @@ export const exportServiceReqReport = async (req, res) => {
 
     headerRow.height = 25;
 
+    worksheet.getColumn("assignedAt").numFmt = "dd-mm-yyyy hh:mm";
+    worksheet.getColumn("startedAt").numFmt = "dd-mm-yyyy hh:mm";
+    worksheet.getColumn("completedAt").numFmt = "dd-mm-yyyy hh:mm";
     worksheet.getColumn("createdAt").numFmt = "dd-mm-yyyy hh:mm";
-
     worksheet.getColumn("updatedAt").numFmt = "dd-mm-yyyy hh:mm";
 
     worksheet.eachRow((row, rowNumber) => {
@@ -1415,7 +1287,7 @@ export const exportServiceReqReport = async (req, res) => {
 
     worksheet.autoFilter = {
       from: "A1",
-      to: "K1",
+      to: "P1",
     };
 
     worksheet.views = [
@@ -1448,14 +1320,48 @@ export const exportServiceReqReport = async (req, res) => {
   }
 };
 
-export const getRequestByIdData = async (req, res) => {
+export const deleteServiceRequest = async (req, res) => {
+  try {
+    const { reqid } = req.params;
+
+    await ServiceRequestServices.updateOne(
+      {
+        _id: reqid,
+        isDeleted: false,
+      },
+      {
+        $set: {
+          isDeleted: true,
+        },
+      },
+    );
+
+    await redisServices.delete(redisKeys.dashboard.stats());
+
+    return successResponse(res, {
+      statusCode: 200,
+      message: "Service request deleted successfully.",
+    });
+  } catch (error) {
+    console.log("error:", error);
+
+    return errorResponse(res, {
+      statusCode: 500,
+      message: "Unable to delete service request.",
+      errors: error.message,
+    });
+  }
+};
+
+export const getServiceRequestForReassign = async (req, res) => {
   try {
     const { reqid } = req.params;
 
     const pipeline = [
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(reqid),
+          _id: toObjectId(reqid),
+          isDeleted: false,
         },
       },
 
@@ -1488,7 +1394,7 @@ export const getRequestByIdData = async (req, res) => {
       {
         $lookup: {
           from: "staffs",
-          localField: "assignedStaffId",
+          localField: "assignedStaffIds",
           foreignField: "_id",
           pipeline: [
             {
@@ -1510,6 +1416,7 @@ export const getRequestByIdData = async (req, res) => {
                 as: "user",
               },
             },
+
             {
               $unwind: {
                 path: "$user",
@@ -1522,25 +1429,25 @@ export const getRequestByIdData = async (req, res) => {
       },
 
       {
-        $unwind: {
-          path: "$assignedStaff",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-
-      {
         $project: {
           _id: 1,
           title: 1,
           status: 1,
+          assignedStaffIds: 1,
           assignedStaff: 1,
+          user: 1,
         },
       },
     ];
 
     const result = await ServiceRequestServices.getAggData(pipeline);
 
- 
+    if (!result.length) {
+      return errorResponse(res, {
+        statusCode: 404,
+        message: "Service request not found",
+      });
+    }
 
     return successResponse(res, {
       statusCode: 200,
@@ -1548,7 +1455,7 @@ export const getRequestByIdData = async (req, res) => {
       data: result[0],
     });
   } catch (error) {
-    console.log("getRequestByIdData error:", error);
+    console.log("getServiceRequestForReassign error:", error);
 
     return errorResponse(res, {
       statusCode: 500,
@@ -1558,51 +1465,130 @@ export const getRequestByIdData = async (req, res) => {
   }
 };
 
-export const renderNotificationPage = async (req, res) => {
+export const reassignRequest = async (req, res) => {
   try {
-    return res.render("admin/notification/index", {
-      title: "Notifications",
-    });
-  } catch (error) {
-    console.log("renderNotificationPage error:", error);
+    const { requestId } = req.params;
+    const { staffIds } = req.body;
+    const adminId = req.user.id;
 
-    return res.status(500).render("admin/error", {
-      message: "Failed to load notifications",
-    });
-  }
-};
+    const serviceRequest =
+      await ServiceRequestServices.getdatabyfindOne({
+        _id: requestId,
+        isDeleted: false,
+      });
 
-export const deleteServiceRequest = async (req, res) => {
-  try {
-    const { reqid } = req.params;
+   
 
-    const serviceRequest = await ServiceRequestServices.getdatabyfindOne({
-      _id: reqid,
-    });
+    if (serviceRequest.status === "completed") {
+      return errorResponse(res, {
+        statusCode: 400,
+        message: "Completed request cannot be reassigned.",
+      });
+    }
 
-    const categoryId = serviceRequest.categoryId;
-
-    await ServiceRequestServices.deleteOne({
-      _id: reqid,
+    const staffList = await staffServices.getData({
+      _id: { $in: staffIds },
     });
 
-    await redisServices.delete(redisKeys.category.all());
+    const newStaffIds = staffList.map(
+      (staff) => staff._id,
+    );
 
-    await redisServices.delete(redisKeys.category.byId(categoryId));
+    const staffChanges = compareStaffIds({
+      oldStaffIds: serviceRequest.assignedStaffIds,
+      newStaffIds,
+      oldAcceptedStaffIds: serviceRequest.acceptedStaffIds,
+    });
 
-    await redisServices.delete(redisKeys.dashboard.stats())
+    const {
+      removedStaffIds,
+      addedStaffIds,
+      acceptedStaffIds,
+    } = staffChanges;
+
+    const assignedAt =
+      serviceRequest.assignedAt || new Date();
+
+    await ServiceRequestServices.updateOne(
+      {
+        _id: requestId,
+        isDeleted: false,
+      },
+      {
+        $set: {
+          assignedStaffIds: newStaffIds,
+          acceptedStaffIds,
+          assignedAt,
+        },
+      },
+    );
+
+    await auditLogServices.create({
+      userId: adminId,
+      action: "SERVICE_REQUEST_REASSIGNED",
+      entity: "ServiceRequest",
+      entityId: serviceRequest._id,
+
+      oldValue: {
+        assignedStaffIds:
+          serviceRequest.assignedStaffIds || [],
+        acceptedStaffIds:
+          serviceRequest.acceptedStaffIds || [],
+        status: serviceRequest.status,
+        assignedAt:
+          serviceRequest.assignedAt || null,
+      },
+
+      newValue: {
+        assignedStaffIds: newStaffIds,
+        acceptedStaffIds,
+        status: serviceRequest.status,
+        assignedAt,
+      },
+
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent"),
+    });
+
+    const removedStaff = await staffServices.getData({
+      _id: { $in: removedStaffIds },
+    });
+
+    const addedStaff = staffList.filter((staff) =>
+      addedStaffIds.includes(
+        staff._id.toString(),
+      ),
+    );
+
+    await sendReassignmentNotifications({
+      serviceRequest,
+      adminId,
+      removedStaff,
+      addedStaff,
+      staffList,
+      status: serviceRequest.status,
+    });
+
+    await redisServices.delete(
+      redisKeys.dashboard.stats(),
+    );
 
     return successResponse(res, {
       statusCode: 200,
-      message: "Service request deleted successfully.",
+      message: "Service request reassigned successfully.",
+      data: {
+        requestId: serviceRequest._id,
+        staffIds: newStaffIds,
+        acceptedStaffIds,
+        status: serviceRequest.status,
+      },
     });
   } catch (error) {
-    
-    console.log(" error:", error);
+    console.log("reassignRequest error:", error);
 
     return errorResponse(res, {
       statusCode: 500,
-      message: "Unable to delete service request.",
+      message: "Failed to reassign service request.",
       errors: error.message,
     });
   }

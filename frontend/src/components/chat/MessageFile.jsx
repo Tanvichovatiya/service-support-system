@@ -1,13 +1,14 @@
+
 "use client";
 
 import { useState } from "react";
 import {
-  FaFilePdf,
-  FaFileWord,
-  FaFileExcel,
-  FaFilePowerpoint,
-  FaFileAlt,
   FaDownload,
+  FaFileAlt,
+  FaFileExcel,
+  FaFilePdf,
+  FaFilePowerpoint,
+  FaFileWord,
   FaSpinner,
 } from "react-icons/fa";
 
@@ -19,7 +20,6 @@ const FILE_TYPES = {
     mimeTypes: ["application/pdf"],
     icon: FaFilePdf,
   },
-
   word: {
     extensions: ["doc", "docx"],
     mimeTypes: [
@@ -28,7 +28,6 @@ const FILE_TYPES = {
     ],
     icon: FaFileWord,
   },
-
   excel: {
     extensions: ["xls", "xlsx", "csv"],
     mimeTypes: [
@@ -38,7 +37,6 @@ const FILE_TYPES = {
     ],
     icon: FaFileExcel,
   },
-
   powerpoint: {
     extensions: ["ppt", "pptx"],
     mimeTypes: [
@@ -63,7 +61,9 @@ const getFileIcon = (extension, mimeType) => {
 };
 
 const formatFileSize = (bytes) => {
-  if (!bytes || bytes <= 0) return "0 B";
+  if (!bytes || bytes <= 0) {
+    return "0 B";
+  }
 
   if (bytes < 1024) {
     return `${bytes} B`;
@@ -81,10 +81,11 @@ const formatFileSize = (bytes) => {
 };
 
 const MessageFile = ({ attachment }) => {
-
   const [downloading, setDownloading] = useState(false);
 
-  if (!attachment?._id) return null;
+  if (!attachment?._id) {
+    return null;
+  }
 
   const extension =
     attachment.extension?.toLowerCase() ||
@@ -96,24 +97,20 @@ const MessageFile = ({ attachment }) => {
   const Icon = getFileIcon(extension, mimeType);
 
   const fileName =
-    attachment.originalName ||
-    attachment.fileName ||
-    "Attachment";
+    attachment.originalName || attachment.fileName || "Attachment";
 
   const handleDownload = async () => {
-    if (downloading) return;
+    if (downloading) {
+      return;
+    }
 
     try {
       setDownloading(true);
-
       await downloadAttachment(attachment);
     } catch (error) {
       console.error("Failed to download attachment:", error);
 
-      alert(
-        error?.response?.data?.message ||
-          "Unable to download file"
-      );
+      alert(error?.response?.data?.message || "Unable to download file");
     } finally {
       setDownloading(false);
     }
@@ -121,81 +118,31 @@ const MessageFile = ({ attachment }) => {
 
   return (
     <div className="mt-2 flex w-[300px] max-w-full items-center gap-3 rounded-xl border border-border bg-surface-soft p-3">
-    
-      <div className="
-          flex
-          h-10
-          w-10
-          shrink-0
-          items-center
-          justify-center
-          rounded-lg
-          bg-brand-soft
-          text-brand
-        "
-      >
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
         <Icon size={20} />
       </div>
 
-      {/* FILE INFORMATION */}
-
       <div className="min-w-0 flex-1">
-        <p
-          className="
-            truncate
-            text-sm
-            font-medium
-            text-text-primary
-          "
-          title={fileName}
-        >
+        <p className="truncate text-sm font-medium text-text-primary" title={fileName}>
           {fileName}
         </p>
 
         <p className="mt-0.5 text-xs text-text-muted">
-          {extension
-            ? extension.toUpperCase()
-            : "FILE"}{" "}
-          · {formatFileSize(attachment.size)}
+          {extension ? extension.toUpperCase() : "FILE"} ·{" "}
+          {formatFileSize(attachment.size)}
         </p>
       </div>
-
-      {/* DOWNLOAD */}
 
       <button
         type="button"
         onClick={handleDownload}
         disabled={downloading}
-        className="
-          flex
-          h-8
-          w-8
-          shrink-0
-          items-center
-          justify-center
-          rounded-lg
-          text-text-muted
-          transition
-          hover:bg-black/10
-          disabled:cursor-not-allowed
-          disabled:opacity-50
-        "
-        title={
-          downloading
-            ? "Downloading..."
-            : "Download"
-        }
-        aria-label={
-          downloading
-            ? "Downloading file"
-            : "Download file"
-        }
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-muted transition hover:bg-black/10 disabled:cursor-not-allowed disabled:opacity-50"
+        title={downloading ? "Downloading..." : "Download"}
+        aria-label={downloading ? "Downloading file" : "Download file"}
       >
         {downloading ? (
-          <FaSpinner
-            size={14}
-            className="animate-spin"
-          />
+          <FaSpinner size={14} className="animate-spin" />
         ) : (
           <FaDownload size={14} />
         )}

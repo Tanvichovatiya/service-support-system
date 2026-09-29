@@ -8,6 +8,7 @@ const notificationServices = {
     try {
       const notification = await Notification.create(data);
 
+      console.log("data:",data.receiverId)
       const unreadCount = await Notification.countDocuments({
         receiverId: data.receiverId,
         isRead: false,

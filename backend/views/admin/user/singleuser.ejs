@@ -73,7 +73,7 @@ const getPercentage = (value) => {
 
   <main class="flex min-w-0 flex-1 flex-col overflow-hidden">
 
-  <header class="shrink-0 border-b border-border bg-surface">
+  <header class="shrink-0 border-b border-border bg-accent-soft">
 
   <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
 
@@ -160,9 +160,7 @@ const getPercentage = (value) => {
                   <%= fullName %>
                 </h2>
 
-                <% if (
-                  currentUser.accountStatus === "ACTIVE" ||
-                  currentUser.isActive === true
+                <% if (currentUser.isOnline === true
                 ) { %>
 
                   <span
@@ -171,18 +169,18 @@ const getPercentage = (value) => {
                     <span
                       class="h-1.5 w-1.5 rounded-full bg-success"
                     ></span>
-                    Active
+                    Online
                   </span>
 
                 <% } else { %>
 
                   <span
-                    class="inline-flex items-center gap-1.5 rounded-full bg-danger-light px-3 py-1 text-xs font-semibold text-danger"
+                    class="inline-flex items-center gap-1.5 rounded-full bg-danger-light px-3 py-1 text-xs font-semibold text-gray-500"
                   >
                     <span
-                      class="h-1.5 w-1.5 rounded-full bg-danger"
+                      class="h-1.5 w-1.5 rounded-full bg-gray-300"
                     ></span>
-                    Inactive
+                    Offline
                   </span>
 
                 <% } %>
@@ -397,7 +395,7 @@ const getPercentage = (value) => {
 
         </div>
 
-
+<!-- 
         <div class="rounded-admin-lg border border-border bg-surface p-5 transition hover:border-danger hover:shadow-admin-hover">
 
           <div class="flex items-center justify-between">
@@ -422,7 +420,7 @@ const getPercentage = (value) => {
 
           </div>
 
-        </div>
+        </div> -->
 
       </div>
 
@@ -582,7 +580,7 @@ const getPercentage = (value) => {
           </div>
 
 
-    
+<!--     
           <div>
 
             <div class="mb-2 flex items-center justify-between">
@@ -612,7 +610,7 @@ const getPercentage = (value) => {
 
             </div>
 
-          </div>
+          </div> -->
 
         </div>
 

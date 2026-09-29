@@ -1,3 +1,4 @@
+
 document.addEventListener("DOMContentLoaded", () => {
   const notificationList = document.getElementById("notificationList");
   const notificationPagination = document.getElementById("notificationPagination");
@@ -122,6 +123,96 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .join("");
   }
+
+function renderNotifications(notifications) {
+  if (!notifications.length) {
+    notificationList.innerHTML = `
+      <div class="mx-auto w-full max-w-2xl rounded-xl border border-brand/30 bg-brand-soft p-4">
+        <i class="fa-regular fa-bell mb-3 text-3xl text-gray-400"></i>
+
+        <p class="text-sm text-gray-500">
+          No unread notifications.
+        </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  notificationList.innerHTML = notifications
+    .map((notification) => {
+      const hasRequestId = Boolean(notification.requestId);
+
+      return `
+        <div
+          class="rounded-xl border border-brand/30 bg-brand-soft p-4 mx-auto"
+          data-notification-id="${notification._id}"
+        >
+          <div class="flex items-start gap-4">
+
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand"
+            >
+              <i class="fa-solid fa-bell text-white"></i>
+            </div>
+
+            <div class="min-w-0 flex-1">
+
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="font-semibold text-text">
+                    ${escapeHtml(notification.type || "Notification")}
+                  </p>
+
+                  <p class="mt-1 text-sm text-gray-600">
+                    ${escapeHtml(notification.message || "")}
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-4 flex items-center justify-between gap-3">
+
+                <span class="text-xs text-gray-500">
+                  ${formatDate(notification.createdAt)}
+                </span>
+
+                <div class="flex items-center gap-3">
+
+                  ${
+                    hasRequestId
+                      ? `
+                        <button
+                          type="button"
+                          class="view-request-btn rounded-lg bg-brand px-3 py-2 text-xs font-medium text-white hover:bg-brand-dark cursor-pointer"
+                          data-request-id="${notification.requestId}"
+                        >
+                          <i class="fa-solid fa-eye mr-1"></i>
+                          View
+                        </button>
+                      `
+                      : ""
+                  }
+
+                  <button
+                    type="button"
+                    class="mark-read-btn text-xs font-medium text-brand hover:underline cursor-pointer"
+                    data-id="${notification._id}"
+                  >
+                    Mark as read
+                  </button>
+
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+
 
   function formatDate(date) {
     if (!date) return "";
@@ -321,4 +412,28 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   loadUnreadNotifications();
+
+notificationList.addEventListener("click", async (event) => {
+  const viewButton = event.target.closest(".view-request-btn");
+
+  if (viewButton) {
+    const requestId = viewButton.dataset.requestId;
+
+    if (!requestId) return;
+
+    window.location.href = `/admin/servicerequest/${requestId}`;
+
+    return;
+  }
+
+  const markReadButton = event.target.closest(".mark-read-btn");
+
+  if (!markReadButton) return;
+
+  const notificationId = markReadButton.dataset.id;
+
+  await markAsRead(notificationId);
+});
+
+
 });

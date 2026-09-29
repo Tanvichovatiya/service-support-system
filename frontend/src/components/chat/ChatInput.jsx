@@ -11,9 +11,7 @@ import { addMessage } from "@/redux/slice/chatSlice";
 const ChatInput = () => {
   const dispatch = useDispatch();
 
-  const { selectedContact } = useSelector(
-    (state) => state.chat
-  );
+  const { selectedContact } = useSelector((state) => state.chat);
 
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
@@ -24,28 +22,16 @@ const ChatInput = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!selectedContact) {
+    if (!selectedContact || (!text.trim() && !file)) {
       return;
     }
 
-    if (!text.trim() && !file) {
-      return;
-    }
-
-
-    const receiverId =
-      selectedContact.userId || selectedContact._id;
-
+    const receiverId = selectedContact.userId || selectedContact._id;
 
     try {
       setSending(true);
 
-
-      const newMessage = await sendMsg(
-        receiverId,
-        text.trim(),
-        file
-      );
+      const newMessage = await sendMsg(receiverId, text.trim(), file);
 
       dispatch(addMessage(newMessage));
 
@@ -62,33 +48,31 @@ const ChatInput = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files?.[0] || null;
+    setFile(selectedFile);
+  };
+
+  const handleRemoveFile = () => {
+    setFile(null);
+
+    if (fileRef.current) {
+      fileRef.current.value = "";
+    }
+  };
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="
-    shrink-0
-    border-t
-    border-border
-    bg-surface
-    p-2
-    sm:p-4
-  "
+      className="shrink-0 border-t border-border bg-surface p-2 sm:p-4"
     >
       {file && (
         <div className="mb-2 flex items-center gap-2 px-1 text-xs text-text-muted">
-          <span className="min-w-0 flex-1 truncate">
-            {file.name}
-          </span>
+          <span className="min-w-0 flex-1 truncate">{file.name}</span>
 
           <button
             type="button"
-            onClick={() => {
-              setFile(null);
-
-              if (fileRef.current) {
-                fileRef.current.value = "";
-              }
-            }}
+            onClick={handleRemoveFile}
             className="shrink-0 text-red-500"
           >
             Remove
@@ -97,38 +81,18 @@ const ChatInput = () => {
       )}
 
       <div className="flex min-w-0 gap-2 sm:gap-3">
-
         <input
           ref={fileRef}
           type="file"
           className="hidden"
-          onChange={(e) => {
-            const selectedFile = e.target.files?.[0];
-            setFile(selectedFile || null);
-          }}
+          onChange={handleFileChange}
         />
 
         <button
           type="button"
           disabled={sending}
           onClick={() => fileRef.current?.click()}
-          className="
-        flex
-        h-10
-        w-10
-        shrink-0
-        items-center
-        justify-center
-        rounded-xl
-        border
-        border-border
-        text-text-muted
-        transition
-        hover:bg-surface-soft
-        disabled:opacity-50
-        sm:h-11
-        sm:w-11
-      "
+          className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border text-text-muted transition hover:bg-surface-soft disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
         >
           <FaPaperclip size={14} />
         </button>
@@ -139,50 +103,13 @@ const ChatInput = () => {
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message..."
           disabled={sending}
-          className="
-        h-10
-        min-w-0
-        flex-1
-        rounded-xl
-        border
-        border-border
-        bg-surface-soft
-        px-3
-        text-sm
-        text-text-primary
-        outline-none
-        placeholder:text-text-muted
-        focus:border-brand
-        focus:ring-2
-        focus:ring-brand/10
-        sm:h-11
-        sm:px-4
-      "
+          className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-surface-soft px-3 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand/10 sm:h-11 sm:px-4"
         />
 
         <button
           type="submit"
-          disabled={
-            sending ||
-            (!text.trim() && !file)
-          }
-          className="
-        flex
-        h-10
-        w-10
-        shrink-0
-        items-center
-        justify-center
-        rounded-xl
-        bg-brand
-        text-white
-        transition
-        hover:opacity-90
-        disabled:cursor-not-allowed
-        disabled:opacity-50
-        sm:h-11
-        sm:w-11
-      "
+          disabled={sending || (!text.trim() && !file)}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
         >
           <FaPaperPlane size={13} />
         </button>

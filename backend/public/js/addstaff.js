@@ -36,11 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
     };
-
-    // Existing selected skills
     updateStyle();
 
-    // User can select/unselect multiple skills
     checkbox.addEventListener("change", updateStyle);
   });
 });

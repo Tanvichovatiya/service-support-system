@@ -6,25 +6,27 @@ import { errorResponse, successResponse } from "../../utils/apiResponse.js";
 import staffServices from "../../services/staffServcies.js";
 import { hasheValue } from "../../utils/hashValue.js";
 import { sendStaffInvitationMail } from "../../utils/sendStaffInvitationMail.js";
-import { pipeline } from "stream";
 import { renderServerError } from "../../utils/ejsResponse.js";
 import mongoose from "mongoose";
 import { auditLogServices } from "../../services/auditLogServices.js";
 import redisServices from "../../services/redis/redisServices.js";
 import { redisKeys } from "../../utils/redisKey.js";
+import { buildRegexSearch, getPagination } from "../../utils/queryHelper.js";
+import { toObjectId } from "../../utils/convertToObjectId.js";
 
 export const getStaff = async (req, res) => {
   try {
-    const page = Number(req.query.page) || 1;
-    const limit = 6;
-    const skip = (page - 1) * limit;
-
+    const { page, skip, limit } = getPagination(req.query, 6);
     const search = (req.query.search || "").trim();
     const isOnline = req.query.isOnline;
 
-    
+    const searchQuery = buildRegexSearch(search, [
+      "user.firstname",
+      "user.lastname",
+      "department",
+    ]);
+
     const aggregation = [
-      
       {
         $lookup: {
           from: "users",
@@ -35,9 +37,12 @@ export const getStaff = async (req, res) => {
       },
 
       {
-        $unwind: {
-          path: "$user",
-          preserveNullAndEmptyArrays: false,
+        $unwind: "$user",
+      },
+
+      {
+        $match: {
+          "user.isDeleted": false,
         },
       },
 
@@ -51,49 +56,14 @@ export const getStaff = async (req, res) => {
           ]
         : []),
 
-   
-      ...(search
+      ...(searchQuery
         ? [
             {
-              $match: {
-                $or: [
-                  {
-                    "user.firstname": {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-                  {
-                    "user.lastname": {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-                  {
-                    "user.email": {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-                  {
-                    department: {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-                  {
-                    skills: {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-                ],
-              },
+              $match: searchQuery,
             },
           ]
         : []),
 
-   
       {
         $lookup: {
           from: "servicerequests",
@@ -103,8 +73,9 @@ export const getStaff = async (req, res) => {
           pipeline: [
             {
               $match: {
+                isDeleted: false,
                 $expr: {
-                  $eq: ["$assignedStaffId", "$$staffId"],
+                  $in: ["$$staffId", "$assignedStaffIds"],
                 },
               },
             },
@@ -150,15 +121,12 @@ export const getStaff = async (req, res) => {
           skills: 1,
           createdAt: 1,
 
-         
           firstname: "$user.firstname",
           lastname: "$user.lastname",
           email: "$user.email",
           gender: "$user.gender",
-          isActive: "$user.isActive",
           isOnline: "$user.isOnline",
 
-          
           assignedRequests: {
             $ifNull: [
               {
@@ -216,13 +184,12 @@ export const getStaff = async (req, res) => {
         },
       },
     ];
-
     const aggResult = await staffServices.getAggData(aggregation);
     const data = aggResult[0] || {};
     const staff = data.staff || [];
     const totalStaff = data.totalStaff?.[0]?.count || 0;
     const totalPages = Math.ceil(totalStaff / limit);
-    // console.log(staff);
+    console.log(staff);
     return res.render("admin/staff/index", {
       staff,
       pagination: {
@@ -346,8 +313,6 @@ export const addStaff = async (req, res) => {
       );
     }
 
-    // setFlash(req, "success", "Staff added successfully");
-
     return successResponse(res, {
       statusCode: 200,
       message: "Staff added successfully",
@@ -361,7 +326,6 @@ export const addStaff = async (req, res) => {
   }
 };
 
-
 export const getStaffById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -369,7 +333,7 @@ export const getStaffById = async (req, res) => {
     const aggregation = [
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(id),
+          _id: toObjectId(id),
         },
       },
 
@@ -383,25 +347,21 @@ export const getStaffById = async (req, res) => {
       },
 
       {
-        $unwind: {
-          path: "$user",
-          preserveNullAndEmptyArrays: false,
-        },
+        $unwind: "$user",
       },
 
       {
         $lookup: {
           from: "servicerequests",
-
           let: {
             staffId: "$_id",
           },
-
           pipeline: [
             {
               $match: {
+                isDeleted: false,
                 $expr: {
-                  $eq: ["$assignedStaffId", "$$staffId"],
+                  $in: ["$$staffId", "$assignedStaffIds"],
                 },
               },
             },
@@ -419,18 +379,14 @@ export const getStaffById = async (req, res) => {
             {
               $lookup: {
                 from: "categories",
-
                 localField: "categoryId",
                 foreignField: "_id",
-
                 as: "category",
               },
             },
 
             {
-              $unwind: {
-                path: "$category",
-              },
+              $unwind: "$category",
             },
 
             {
@@ -443,29 +399,19 @@ export const getStaffById = async (req, res) => {
             },
 
             {
-              $unwind: {
-                path: "$requestUser",
-              },
+              $unwind: "$requestUser",
             },
 
             {
               $project: {
                 _id: 1,
-
                 title: 1,
-
                 description: 1,
-
                 priority: 1,
-
                 status: 1,
-
                 createdAt: 1,
-
                 assignedAt: 1,
-
                 startedAt: 1,
-
                 completedAt: 1,
 
                 category: {
@@ -482,7 +428,6 @@ export const getStaffById = async (req, res) => {
               },
             },
           ],
-
           as: "recentRequests",
         },
       },
@@ -490,15 +435,9 @@ export const getStaffById = async (req, res) => {
       {
         $project: {
           _id: 1,
-
           employeeId: 1,
-
           department: 1,
-
           skills: 1,
-
-          isOnline: 1,
-
           createdAt: 1,
 
           user: {
@@ -507,7 +446,7 @@ export const getStaffById = async (req, res) => {
             lastname: "$user.lastname",
             email: "$user.email",
             gender: "$user.gender",
-            isActive: "$user.isActive",
+            isOnline: "$user.isOnline",
           },
 
           recentRequests: 1,
@@ -539,7 +478,7 @@ export const renderEditStaff = async (req, res) => {
     const aggpipiline = [
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(id),
+          _id: toObjectId(id),
         },
       },
       {
@@ -565,7 +504,6 @@ export const renderEditStaff = async (req, res) => {
           lastname: "$user.lastname",
           email: "$user.email",
           gender: "$user.gender",
-          isActive: "$user.isActive",
         },
       },
     ];
@@ -590,8 +528,7 @@ export const editStaff = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const { firstname, lastname, gender, department, skills, isActive } =
-      req.body;
+    const { firstname, lastname, gender, department, skills } = req.body;
 
     const existingStaff = await staffServices.getDatabyId(id);
 
@@ -602,7 +539,6 @@ export const editStaff = async (req, res) => {
           firstname: firstname.trim(),
           lastname: lastname.trim(),
           gender: gender.trim(),
-          isActive: isActive,
         },
       },
     );
@@ -629,91 +565,34 @@ export const editStaff = async (req, res) => {
   }
 };
 
-// export const deleteStaff = async(req,res) =>{
-//   try {
-//     const {id} = req.params;
-//     const staff = await staffServices.getDatabyId(id)
-//     await userServices.updateOne(
-//       { _id: staff.userId },
-//       {
-//         $set: {
-//           isActive: false,
-//         },
-//       }
-//     );
-//     return successResponse(res,{statusCode:200,message:"staff deactivated  successfully"})
-//   } catch (error) {
-//     console.log("err:",error)
-//     return errorResponse(res,{statusCode:500,message:"Server Err.failed to Delete."})
-//   }
-// }
-
-export const EditStaffStatus = async (req, res) => {
+export const deleteStaff = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const existingStaff = await staffServices.getDatabyId(id);
-
-    const existingUser = await userServices.getDatabyId(existingStaff.userId);
-
-    const newStatus = !existingUser.isActive;
-
+    const staff = await staffServices.getDatabyId(id);
     await userServices.updateOne(
-      { _id: existingStaff.userId },
+      { _id: staff.userId },
       {
         $set: {
-          isActive: newStatus,
+          isDeleted: true,
         },
       },
     );
-
-    await auditLogServices.create({
-      userId: req.user.id,
-
-      action: newStatus ? "STAFF_ACTIVATED" : "STAFF_DEACTIVATED",
-
-      entity: "Staff",
-
-      entityId: existingStaff._id,
-
-      oldValue: {
-        isActive: existingUser.isActive,
-      },
-
-      newValue: {
-        isActive: newStatus,
-      },
-
-      ipAddress: req.ip,
-      userAgent: req.get("user-agent"),
-    });
-    await redisServices.delete(redisKeys.dashboard.stats())
     return successResponse(res, {
       statusCode: 200,
-      message: newStatus
-        ? "Staff activated successfully."
-        : "Staff deactivated successfully.",
+      message: "staff deleted  successfully",
     });
   } catch (error) {
-    console.error("Edit Staff Status Error:", error);
-
-    return errorResponse(res, { statusCode: 500, message: "server err" });
+    console.log("err:", error);
+    return errorResponse(res, {
+      statusCode: 500,
+      message: "Server Err. failed to Delete.",
+    });
   }
 };
 
-
 export const getAllActiveStaff = async (req, res) => {
- 
   try {
     const aggPipeline = [
-   
-      {
-        $match: {
-          isDeleted: false,
-        },
-      },
-
-     
       {
         $lookup: {
           from: "users",
@@ -724,7 +603,10 @@ export const getAllActiveStaff = async (req, res) => {
             {
               $match: {
                 $expr: {
-                  $eq: ["$_id", "$$userId"],
+                  $and: [
+                    { $eq: ["$_id", "$$userId"] },
+                    { $eq: ["$isDeleted", false] },
+                  ],
                 },
               },
             },
@@ -739,6 +621,7 @@ export const getAllActiveStaff = async (req, res) => {
           as: "staffUser",
         },
       },
+
       {
         $unwind: {
           path: "$staffUser",

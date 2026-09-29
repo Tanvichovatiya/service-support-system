@@ -80,3 +80,79 @@ export const sendForgotPasswordMail = async ({
     throw error;
   }
 };
+
+
+export const sendRegisterMail = async ({
+  email,
+  firstname,
+  otp,
+}) => {
+  try {
+    await sendMail({
+      to: email,
+      subject: "Service Support System - Email Verification",
+
+      html: `
+        <div
+          style="
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 30px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+          "
+        >
+          <h2>
+            Welcome to Service Support System
+          </h2>
+
+          <p>
+            Hello ${firstname},
+          </p>
+
+          <p>
+            Thank you for registering with Service Support System.
+            Please use the OTP below to verify your email address.
+          </p>
+
+          <div
+            style="
+              margin: 25px 0;
+              text-align: center;
+              font-size: 32px;
+              font-weight: bold;
+              letter-spacing: 8px;
+            "
+          >
+            ${otp}
+          </div>
+
+          <p>
+            This OTP will expire in
+            <strong>10 minutes</strong>.
+          </p>
+
+          <p>
+            If you did not create this account, please ignore this email.
+          </p>
+
+          <p>
+            Regards,<br />
+            Service Support System
+          </p>
+
+          <hr />
+
+          <p style="color: #777; font-size: 12px;">
+            This is an automated email. Please do not reply.
+          </p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.log("sendRegisterMail error:", error);
+    throw error;
+  }
+};

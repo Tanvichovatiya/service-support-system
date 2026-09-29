@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import authorize from "../../../middleware/authorize.middleware.js";
-import {  addStaff,editStaff,EditStaffStatus,getAllActiveStaff,getStaff, getStaffById, renderAddStaff, renderEditStaff,  } from "../../../controller/adminController/mngStaffController.js";
+import {  addStaff,deleteStaff,editStaff,getAllActiveStaff,getStaff, getStaffById, renderAddStaff, renderEditStaff,  } from "../../../controller/adminController/mngStaffController.js";
 
 import { ValidateMiddleware } from "../../../middleware/admin/ValidateMiddleware.js";
 import { addStaffValidator } from "../../../validators/StaffValidator.js";
@@ -18,13 +18,12 @@ mngStaffRoutes.post('/add',authMiddleware,authorize("admin"),addStaffValidator,V
 
 mngStaffRoutes.get('/active',authMiddleware,authorize("admin"),getAllActiveStaff)
 
-mngStaffRoutes.patch("/:id/status",authMiddleware,authorize("admin"),EditStaffStatus)
-
-
 mngStaffRoutes.get('/:id/edit',authMiddleware,authorize("admin"),renderEditStaff)
 
 mngStaffRoutes.get("/:id",authMiddleware,authorize("admin"),getStaffById)
 
 mngStaffRoutes.put("/:id/edit",authMiddleware,authorize("admin"),editStaff)
+
+mngStaffRoutes.delete("/:id/delete",authMiddleware,authorize("admin"),deleteStaff)
 
 export default mngStaffRoutes;

@@ -13,18 +13,14 @@ export const getUserProfile = async (req, res) => {
       "-password -passwordSetupToken -passwordSetupExpires -role -email -isEmailVerified ",
     );
 
-    if (!user) {
-      return errorResponse(res, {
-        statusCode: 404,
-        message: "User not found",
-      });
-    }
+   
 
     return successResponse(res, {
       statusCode: 200,
       message: "User profile fetched successfully",
       data: user,
     });
+
   } catch (error) {
     console.log("err:", error);
 
@@ -45,12 +41,6 @@ export const getStaffProfile = async (req, res) => {
       "-password -passwordSetupToken -passwordSetupExpires  -role -email -isEmailVerified",
     );
 
-    if (!user) {
-      return errorResponse(res, {
-        statusCode: 404,
-        message: "User not found",
-      });
-    }
 
     const staff = await staffServices.getdatabyfindOne({
       userId: userId,
@@ -112,8 +102,7 @@ export const editUserProfile = async (req, res) => {
       try {
         const cloudinaryRes = await uploadToCloudinary(req.file);
 
-        console.log("cloudinary res:", cloudinaryRes);
-
+        // console.log("cloudinary res:", cloudinaryRes);
         updateData.profilePic = cloudinaryRes.secure_url;
       } catch (err) {
         console.log("img upload error:", err);
@@ -140,7 +129,6 @@ export const editUserProfile = async (req, res) => {
       { _id: userId },
       updateData
     );
-
 
 
     return successResponse(res, {
@@ -217,40 +205,6 @@ export const editStaffProfile = async (req, res) => {
       await staffServices.updateOne({ userId: userId }, staffUpdateData);
     }
 
-  
-
-    // const updatedUser = await userServices.getDatabyId(
-    //   userId,
-    //   "-password -passwordSetupToken -passwordSetupExpires",
-    // );
-
-    // const updatedStaff = await staffServices.getdatabyfindOne({
-    //   userId: userId,
-    // });
-
-    // if (!updatedUser || !updatedStaff) {
-    //   return errorResponse(res, {
-    //     statusCode: 404,
-    //     message: "Staff profile not found",
-    //   });
-    // }
-
-    // const profile = {
-    //   _id: updatedUser._id,
-    //   firstname: updatedUser.firstname,
-    //   lastname: updatedUser.lastname,
-    //   email: updatedUser.email,
-    //   gender: updatedUser.gender,
-    //   profilePic: updatedUser.profilePic,
-    //   role: updatedUser.role,
-    //   isEmailVerified: updatedUser.isEmailVerified,
-    //   isActive: updatedUser.isActive,
-    //   isOnline: updatedUser.isOnline,
-
-    //   employeeId: updatedStaff.employeeId,
-    //   department: updatedStaff.department,
-    //   skills: updatedStaff.skills,
-    // };
 
     return successResponse(res, {
       statusCode: 200,

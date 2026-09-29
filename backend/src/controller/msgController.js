@@ -5,12 +5,14 @@ import { errorResponse, successResponse } from "../utils/apiResponse.js";
 import { getIo } from "../socket/initSocket.js";
 import { attachmentServices } from "../services/attachmentServices.js";
 import { MessageServices } from "../services/MessageServices.js";
+import { toObjectId } from "../utils/convertToObjectId.js";
+
 
 export const sendMessage = async (req, res) => {
   try {
     const { id: senderId, role } = req.user;
     const { receiverId } = req.params;
-    const { message } = req.body;
+    const message  = req.body.message;
 
     let attachmentIds = [];
 
@@ -26,12 +28,11 @@ export const sendMessage = async (req, res) => {
       attachmentIds.push(attachment._id);
     }
 
-    const trimmedMessage = message?.trim() || "";
-
+  
     const newMessage = await MessageServices.createData({
       senderId,
       receiverId,
-      message: trimmedMessage,
+      message: message?.trim() || "",
       attachments: attachmentIds,
     });
 
@@ -97,6 +98,7 @@ export const sendMessage = async (req, res) => {
       message: "Message sent successfully",
       data: populatedMessage,
     });
+
   } catch (error) {
     console.error("Send message error:", error);
 
@@ -106,15 +108,16 @@ export const sendMessage = async (req, res) => {
     });
   }
 };
+
+
 export const loadMessage = async (req, res) => {
   try {
     const { id: userId, role } = req.user;
     const { receiverId } = req.params;
 
-    // console.log("loadmsg receiverId:", receiverId, role);
 
-    const currentUserId = new mongoose.Types.ObjectId(userId);
-    const otherUserId = new mongoose.Types.ObjectId(receiverId);
+     const currentUserId = toObjectId(userId);
+    const otherUserId = toObjectId(receiverId);
 
    
     await MessageServices.updateMany(
@@ -164,6 +167,7 @@ export const loadMessage = async (req, res) => {
           message: 1,
           isRead: 1,
           createdAt: 1,
+          updatedAt:1,
 
           attachments: {
             _id: 1,
@@ -229,7 +233,7 @@ export const getUnReadMsg = async (req, res) => {
     const unreadMessages = await MessageServices.getAggData([
       {
         $match: {
-          receiverId: new mongoose.Types.ObjectId(userId),
+          receiverId: toObjectId(userId),
           isRead: false,
         },
       },

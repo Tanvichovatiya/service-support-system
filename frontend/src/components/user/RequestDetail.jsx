@@ -7,7 +7,6 @@ import {
   FiDownload,
   FiFile,
   FiHash,
-  FiMessageCircle,
   FiPaperclip,
   FiUser,
   FiUsers,
@@ -25,15 +24,19 @@ export default function RequestDetails({ request }) {
 
   const priorityStyle = getPriorityStyle(request.priority);
 
-  const staff = request.assignedStaff;
-  const staffUser = staff?.user;
+  const assignedStaff = Array.isArray(request.assignedStaff)
+    ? request.assignedStaff
+    : [];
+
+  const acceptedStaff = Array.isArray(request.acceptedStaff)
+    ? request.acceptedStaff
+    : [];
 
   const handleDownload = async (file) => {
     if (!file?._id) return;
 
     try {
       setDownloadingId(file._id);
-
       await downloadAttachment(file);
     } catch (error) {
       console.error("Failed to download attachment:", error);
@@ -44,75 +47,24 @@ export default function RequestDetails({ request }) {
 
   return (
     <div className="space-y-5">
-      <section
-        className="
-          overflow-hidden
-          rounded-2xl
-          border-[2.1px]
-          border-brand-light
-          bg-surface
-          shadow-admin-sm
-          hover:shadow-admin-hover
-        "
-      >
-        <div
-          className="
-            border-b
-            border-border-light
-            bg-surface-soft
-            px-5
-            py-5
-            sm:px-7
-          "
-        >
+      <section className="overflow-hidden rounded-2xl border-[2.1px] border-brand-light bg-surface shadow-admin-sm hover:shadow-admin-hover">
+        <div className="border-b border-border-light bg-surface-soft px-5 py-5 sm:px-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <div className="mb-3 flex items-center gap-2">
-                <span
-                  className="
-                    rounded-md
-                    bg-brand-soft
-                    px-2.5
-                    py-1
-                    text-[11px]
-                    font-semibold
-                    uppercase
-                    tracking-wide
-                    text-brand
-                  "
-                >
+                <span className="rounded-md bg-brand-soft px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand">
                   {request.category?.name || "General"}
                 </span>
 
-                <span className="text-xs text-text-muted">
-                  Request
-                </span>
+                <span className="text-xs text-text-muted">Request</span>
               </div>
 
-              <h1
-                className="
-                  text-xl
-                  font-semibold
-                  leading-7
-                  text-text-primary
-                  sm:text-2xl
-                "
-              >
+              <h1 className="text-xl font-semibold leading-7 text-text-primary sm:text-2xl">
                 {request.title}
               </h1>
 
-              <div
-                className="
-                  mt-2
-                  flex
-                  items-center
-                  gap-1.5
-                  text-xs
-                  text-text-muted
-                "
-              >
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-text-muted">
                 <FiHash size={13} />
-
                 <span>{request._id}</span>
               </div>
             </div>
@@ -124,53 +76,14 @@ export default function RequestDetails({ request }) {
         </div>
 
         <div className="px-5 py-6 sm:px-7">
-          <p
-            className="
-              whitespace-pre-line
-              text-sm
-              leading-7
-              text-text-secondary
-            "
-          >
+          <p className="whitespace-pre-line text-sm leading-7 text-text-secondary">
             {request.description || "No description provided."}
           </p>
         </div>
 
-        <div
-          className="
-            grid
-            grid-cols-1
-            border-t
-            border-border-light
-            sm:grid-cols-3
-          "
-        >
-          <div
-            className="
-              flex
-              items-center
-              gap-3
-              border-b
-              border-border-light
-              px-5
-              py-4
-              sm:border-b-0
-              sm:border-r
-            "
-          >
-            <div
-              className="
-                flex
-                h-9
-                w-9
-                shrink-0
-                items-center
-                justify-center
-                rounded-lg
-                bg-brand-soft
-                text-brand
-              "
-            >
+        <div className="grid grid-cols-1 border-t border-border-light sm:grid-cols-3">
+          <div className="flex items-center gap-3 border-b border-border-light px-5 py-4 sm:border-b-0 sm:border-r">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
               <FiClock size={16} />
             </div>
 
@@ -180,45 +93,15 @@ export default function RequestDetails({ request }) {
               </p>
 
               <p
-                className={`
-                  mt-0.5
-                  text-sm
-                  font-semibold
-                  capitalize
-                  ${priorityStyle.className}
-                `}
+                className={`mt-0.5 text-sm font-semibold capitalize ${priorityStyle.className}`}
               >
                 {priorityStyle.label}
               </p>
             </div>
           </div>
 
-          <div
-            className="
-              flex
-              items-center
-              gap-3
-              border-b
-              border-border-light
-              px-5
-              py-4
-              sm:border-b-0
-              sm:border-r
-            "
-          >
-            <div
-              className="
-                flex
-                h-9
-                w-9
-                shrink-0
-                items-center
-                justify-center
-                rounded-lg
-                bg-brand-soft
-                text-brand
-              "
-            >
+          <div className="flex items-center gap-3 border-b border-border-light px-5 py-4 sm:border-b-0 sm:border-r">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
               <FiCalendar size={16} />
             </div>
 
@@ -234,19 +117,7 @@ export default function RequestDetails({ request }) {
           </div>
 
           <div className="flex items-center gap-3 px-5 py-4">
-            <div
-              className="
-                flex
-                h-9
-                w-9
-                shrink-0
-                items-center
-                justify-center
-                rounded-lg
-                bg-brand-soft
-                text-brand
-              "
-            >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
               <FiClock size={16} />
             </div>
 
@@ -263,31 +134,10 @@ export default function RequestDetails({ request }) {
         </div>
       </section>
 
-      <section
-        className="
-          rounded-2xl
-          border-[2.1px]
-          border-brand-light
-          bg-surface
-          p-5
-          shadow-admin-sm
-          hover:shadow-admin-hover
-          sm:p-6
-        "
-      >
+      {/* Assigned Staff */}
+      <section className="rounded-2xl border-[2.1px] border-brand-light bg-surface p-5 shadow-admin-sm hover:shadow-admin-hover sm:p-6">
         <div className="mb-5 flex items-center gap-3">
-          <div
-            className="
-              flex
-              h-9
-              w-9
-              items-center
-              justify-center
-              rounded-lg
-              bg-brand-soft
-              text-brand
-            "
-          >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-soft text-brand">
             <FiUsers size={17} />
           </div>
 
@@ -297,81 +147,59 @@ export default function RequestDetails({ request }) {
             </h2>
 
             <p className="text-xs text-text-muted">
-              Person currently handling your request
+              Staff members currently assigned to your request
             </p>
           </div>
         </div>
 
-        {staff && staffUser ? (
-          <div
-            className="
-              flex
-              items-center
-              gap-4
-              rounded-xl
-              border
-              border-border-light
-              bg-surface-soft
-              p-4
-            "
-          >
-            <div
-              className="
-                flex
-                h-12
-                w-12
-                shrink-0
-                items-center
-                justify-center
-                overflow-hidden
-                rounded-full
-                bg-brand-soft
-                text-brand
-              "
-            >
-              {staffUser.profilePic ? (
-                <img
-                  src={staffUser.profilePic}
-                  alt="Staff"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <FiUser size={20} />
-              )}
-            </div>
+        {assignedStaff.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {assignedStaff.map((staff) => {
+              const staffUser = staff?.user;
 
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-semibold text-text-primary">
-                {staffUser.firstname} {staffUser.lastname}
-              </h3>
+              const fullName = [
+                staffUser?.firstname,
+                staffUser?.lastname,
+              ]
+                .filter(Boolean)
+                .join(" ");
 
-              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
-                <span>
-                  Employee ID: {staff.employeeId || "N/A"}
-                </span>
+              return (
+                <div
+                  key={staff._id}
+                  className="flex items-center gap-4 rounded-xl border border-border-light bg-surface-soft p-4"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-soft text-brand">
+                    {staffUser?.profilePic ? (
+                      <img
+                        src={staffUser.profilePic}
+                        alt={fullName || "Staff"}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <FiUser size={20} />
+                    )}
+                  </div>
 
-                <span>
-                  Department: {staff.department || "N/A"}
-                </span>
-              </div>
-            </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-semibold text-text-primary">
+                      {fullName || "Staff Member"}
+                    </h3>
+
+                    <p className="mt-1 text-xs text-text-muted">
+                      Department:{" "}
+                      <span className="font-medium text-text-secondary">
+                        {staff.department || "N/A"}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
-          <div
-            className="
-              rounded-xl
-              border
-              border-border-light
-              bg-surface-soft
-              px-4
-              py-5
-              text-center
-            "
-          >
-            <FiUsers
-              size={20}
-              className="mx-auto mb-2 text-text-muted"
-            />
+          <div className="rounded-xl border border-border-light bg-surface-soft px-4 py-5 text-center">
+            <FiUsers size={20} className="mx-auto mb-2 text-text-muted" />
 
             <p className="text-sm font-medium text-text-secondary">
               No staff assigned yet
@@ -384,31 +212,92 @@ export default function RequestDetails({ request }) {
         )}
       </section>
 
-      <section
-        className="
-          rounded-2xl
-          border-[2.1px]
-          border-brand-light
-          bg-surface
-          p-5
-          shadow-admin-sm
-          hover:shadow-admin-hover
-          sm:p-6
-        "
-      >
+      {/* Accepted Staff */}
+      <section className="rounded-2xl border-[2.1px] border-brand-light bg-surface p-5 shadow-admin-sm hover:shadow-admin-hover sm:p-6">
         <div className="mb-5 flex items-center gap-3">
-          <div
-            className="
-              flex
-              h-9
-              w-9
-              items-center
-              justify-center
-              rounded-lg
-              bg-brand-soft
-              text-brand
-            "
-          >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-soft text-brand">
+            <FiUser size={17} />
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-text-primary">
+              Accepted Staff
+            </h2>
+
+            <p className="text-xs text-text-muted">
+              Staff members who have accepted your request
+            </p>
+          </div>
+        </div>
+
+        {acceptedStaff.length > 0 ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {acceptedStaff.map((staff) => {
+              const staffUser = staff?.user;
+
+              const fullName = [
+                staffUser?.firstname,
+                staffUser?.lastname,
+              ]
+                .filter(Boolean)
+                .join(" ");
+
+              return (
+                <div
+                  key={staff._id}
+                  className="flex items-center gap-4 rounded-xl border border-border-light bg-surface-soft p-4"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-soft text-brand">
+                    {staffUser?.profilePic ? (
+                      <img
+                        src={staffUser.profilePic}
+                        alt={fullName || "Staff"}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <FiUser size={20} />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-semibold text-text-primary">
+                      {fullName || "Staff Member"}
+                    </h3>
+
+                    <p className="mt-1 text-xs text-text-muted">
+                      Department:{" "}
+                      <span className="font-medium text-text-secondary">
+                        {staff.department || "N/A"}
+                      </span>
+                    </p>
+
+                    <span className="mt-2 inline-flex rounded-md bg-brand-soft px-2 py-1 text-[10px] font-semibold text-brand">
+                      Accepted
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border-light bg-surface-soft px-4 py-5 text-center">
+            <FiUser size={20} className="mx-auto mb-2 text-text-muted" />
+
+            <p className="text-sm font-medium text-text-secondary">
+              No staff has accepted yet
+            </p>
+
+            <p className="mt-1 text-xs text-text-muted">
+              Assigned staff members can accept this request.
+            </p>
+          </div>
+        )}
+      </section>
+
+      {/* Attachments */}
+      <section className="rounded-2xl border-[2.1px] border-brand-light bg-surface p-5 shadow-admin-sm hover:shadow-admin-hover sm:p-6">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-soft text-brand">
             <FiPaperclip size={17} />
           </div>
 
@@ -431,50 +320,20 @@ export default function RequestDetails({ request }) {
                 file?.fileName ||
                 `Attachment ${index + 1}`;
 
-              const isDownloading =
-                downloadingId === file?._id;
+              const isDownloading = downloadingId === file?._id;
 
               return (
                 <div
                   key={file?._id || index}
-                  className="
-                    flex
-                    items-center
-                    gap-3
-                    rounded-xl
-                    border
-                    border-border-light
-                    bg-surface-soft
-                    p-3
-                    transition
-                    hover:border-brand
-                    hover:bg-brand-soft
-                  "
+                  className="flex items-center gap-3 rounded-xl border border-border-light bg-surface-soft p-3 transition hover:border-brand hover:bg-brand-soft"
                 >
-                  <div
-                    className="
-                      flex
-                      h-9
-                      w-9
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-lg
-                      bg-brand-soft
-                      text-brand
-                    "
-                  >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand">
                     <FiFile size={16} />
                   </div>
 
                   <div className="min-w-0 flex-1">
                     <p
-                      className="
-                        truncate
-                        text-xs
-                        font-medium
-                        text-text-primary
-                      "
+                      className="truncate text-xs font-medium text-text-primary"
                       title={fileName}
                     >
                       {fileName}
@@ -491,37 +350,13 @@ export default function RequestDetails({ request }) {
                     type="button"
                     onClick={() => handleDownload(file)}
                     disabled={isDownloading}
-                    className="
-                      flex
-                      h-9
-                      w-9
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-lg
-                      text-text-muted
-                      transition-all
-                      duration-200
-                      hover:bg-brand
-                      hover:text-white
-                      active:scale-95
-                      disabled:cursor-not-allowed
-                      disabled:opacity-50 cursor-pointer
-                    "
-                    title={
-                      isDownloading
-                        ? "Downloading..."
-                        : "Download"
-                    }
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-text-muted transition-all duration-200 hover:bg-brand hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                    title={isDownloading ? "Downloading..." : "Download"}
                     aria-label={`Download ${fileName}`}
                   >
                     <FiDownload
                       size={16}
-                      className={
-                        isDownloading
-                          ? "animate-pulse"
-                          : ""
-                      }
+                      className={isDownloading ? "animate-pulse" : ""}
                     />
                   </button>
                 </div>
@@ -529,14 +364,11 @@ export default function RequestDetails({ request }) {
             })}
           </div>
         ) : (
-          <p className="text-sm text-text-muted">
-            No attachments added.
-          </p>
+          <p className="text-sm text-text-muted">No attachments added.</p>
         )}
       </section>
-     
-     <RequestTimeline request={request}/>
-      
+
+      <RequestTimeline request={request} />
     </div>
   );
 }

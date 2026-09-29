@@ -126,6 +126,11 @@ export default function SocketProvider({ children }) {
 
             handleNotification(data);
         };
+        const handleRequestOverdue = (data) => {
+             console.log("service-request:overdue", data); 
+                handleNotification(data); 
+
+            };
 
         socket.on("connect", handleConnect);
 
@@ -144,6 +149,7 @@ export default function SocketProvider({ children }) {
         socket.on("service-request:removed", handleRequestRemoved);
 
         socket.on("service-request:reassigned", handleRequestReassigned);
+        socket.on( "service-request:overdue", handleRequestOverdue, );
 
         if (!socket.connected) {
             socket.connect();
@@ -167,6 +173,7 @@ export default function SocketProvider({ children }) {
             socket.off("service-request:removed", handleRequestRemoved);
 
             socket.off("service-request:reassigned", handleRequestReassigned);
+            socket.off( "service-request:overdue", handleRequestOverdue, );
 
             socket.disconnect();
         };

@@ -11,11 +11,11 @@ import {
   FaLock,
   FaArrowRight,
 } from "react-icons/fa6";
-import {toast} from "react-toastify"
+import { toast } from "react-toastify"
 
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
-import  FileInput  from "@/components/ui/FileInput";
+import FileInput from "@/components/ui/FileInput";
 import Select from "@/components/ui/Select";
 import { motion } from "motion/react";
 
@@ -125,87 +125,87 @@ export const RegisterForm = () => {
 
     return Object.keys(newErrors).length === 0;
   };
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (loading) {
-    return;
-  }
-
-  dispatch(clearErrors());
-
-  const isValid = validateForm();
-
-  if (!isValid) {
-    return;
-  }
-
-  try {
-    dispatch(setLoading(true));
-
-    const submitData = new FormData();
-
-    submitData.append("firstname", formData.firstname.trim());
-    submitData.append("lastname", formData.lastname.trim());
-    submitData.append("email", formData.email.trim().toLowerCase());
-    submitData.append("gender", formData.gender);
-    submitData.append("password", formData.password);
-
-    if (formData.profilePic) {
-      submitData.append("profilePic", formData.profilePic);
+    if (loading) {
+      return;
     }
 
-    
-    const response = await registerUser(submitData);
+    dispatch(clearErrors());
 
-    toast.success(`${response?.message} || Registration successful. OTP has been sent to your email.!`)
+    const isValid = validateForm();
 
-    dispatch(setError(""));
+    if (!isValid) {
+      return;
+    }
 
-    dispatch(setVerificationEmail(response.email));
+    try {
+      dispatch(setLoading(true));
 
-    router.push("/auth/verify-email");
-  } catch (error) {
-    console.log("register error:", error);
+      const submitData = new FormData();
 
-    const responseData = error?.response?.data;
+      submitData.append("firstname", formData.firstname.trim());
+      submitData.append("lastname", formData.lastname.trim());
+      submitData.append("email", formData.email.trim().toLowerCase());
+      submitData.append("gender", formData.gender);
+      submitData.append("password", formData.password);
 
-    if (responseData?.errors && Array.isArray(responseData.errors)) {
-      const fieldErrors = {};
+      if (formData.profilePic) {
+        submitData.append("profilePic", formData.profilePic);
+      }
 
-      responseData.errors.forEach((item) => {
-        Object.entries(item).forEach(([field, message]) => {
-          if (!fieldErrors[field]) {
-            fieldErrors[field] = message;
-          }
+
+      const response = await registerUser(submitData);
+      toast.success(
+        `${response?.message || "Registration successful."} OTP has been sent to your email!`
+      );
+      dispatch(setError(""));
+      console.log("response:", response)
+      dispatch(setVerificationEmail(response.data.email));
+
+      router.push("/auth/verify-email");
+    } catch (error) {
+      console.log("register error:", error);
+
+      const responseData = error?.response?.data;
+
+      if (responseData?.errors && Array.isArray(responseData.errors)) {
+        const fieldErrors = {};
+
+        responseData.errors.forEach((item) => {
+          Object.entries(item).forEach(([field, message]) => {
+            if (!fieldErrors[field]) {
+              fieldErrors[field] = message;
+            }
+          });
         });
-      });
 
-      dispatch(setErrors(fieldErrors));
-    } else {
-      dispatch(
-        setError(
-          responseData?.message ||
+        dispatch(setErrors(fieldErrors));
+      } else {
+        dispatch(
+          setError(
+            responseData?.message ||
             error?.message ||
             "Failed to create account."
-        )
-      );
+          )
+        );
+      }
+    } finally {
+      dispatch(setLoading(false));
     }
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
+  };
 
   return (
-    <motion.form 
-     variants={fadeUp}
-     initial="hidden"
-     whileInView="visible"
-     viewport={{
-      once:false,
-      amount:0.2
-     }}
-     onSubmit={handleSubmit} className="space-y-5" noValidate>
+    <motion.form
+      variants={fadeUp}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{
+        once: false,
+        amount: 0.2
+      }}
+      onSubmit={handleSubmit} className="space-y-5" noValidate>
 
       {error && (
         <p className="text-sm text-red-500 text-center  mb-3">

@@ -1,6 +1,6 @@
-
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   FiArrowRight,
@@ -12,71 +12,50 @@ import {
   FiMapPin,
   FiPhone,
 } from "react-icons/fi";
-import logo from "@/assets/logo.png"
-import Image from "next/image";
-import {motion} from "motion/react"
-import { fadeLeft } from "./ui/Animation";
+
+import logo from "@/assets/logo.png";
 
 export default function Footer({ role = "user" }) {
   const isStaff = role === "staff";
 
   const quickLinks = isStaff
     ? [
-      { label: "Dashboard", href: "/staff/dashboard" },
-      { label: "Requests", href: "/staff/requests/all" },
-      { label: "Profile", href: "/staff/profile" },
-      {label:"About",href:"/staff/about"},
-      {label:"ContactUs",href:"/staff/contactus"}
-    ]
+        { label: "Dashboard", href: "/staff/dashboard" },
+        { label: "Requests", href: "/staff/requests/all" },
+        { label: "Profile", href: "/staff/profile" },
+        { label: "About", href: "/staff/about" },
+        { label: "Contact Us", href: "/staff/contactus" },
+      ]
     : [
-      { label: "Home", href: "/" },
-      { label: "My Requests", href: "/requests" },
-      { label: "Create Request", href: "/request/create" },
-        {label:"About",href:"/user/about"},
-      {label:"ContactUs",href:"/user/contactus"}
-    ];
+        { label: "Home", href: "/user/home" },
+        { label: "My Requests", href: "/user/requests/my" },
+        { label: "Create Request", href: "/user/requests/create" },
+        { label: "About", href: "/user/about" },
+        { label: "Contact Us", href: "/user/contactus" },
+      ];
 
   const supportLinks = isStaff
     ? [
-      { label: "Assigned Requests", href: "/staff/requests" },
-      { label: "Help Center", href: "/help" },
-      { label: "Contact Support", href: "/contact" },
-      { label: "Privacy Policy", href: "/privacy" },
-    ]
+        { label: "Assigned Requests", href: "/staff/requests/all" },
+        { label: "Help Center", href: "/help" },
+        { label: "Contact Support", href: "/staff/contactus" },
+        { label: "Privacy Policy", href: "/privacy" },
+      ]
     : [
-      { label: "Track Request", href: "/requests" },
-      { label: "Help Center", href: "/help" },
-      { label: "Contact Support", href: "/contact" },
-      { label: "Privacy Policy", href: "/privacy" },
-    ];
+        { label: "Track Request", href: "/track" },
+        { label: "Help Center", href: "/help" },
+        { label: "Contact Support", href: "/user/contactus" },
+        { label: "Privacy Policy", href: "#" },
+      ];
 
   return (
-    <motion.footer variants={fadeLeft}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{
-              once: false,
-              amount: 0.2
-            }} className="bg-brand text-white">
-      {/* Main Footer */}
+    <footer className="bg-brand text-white">
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <div className="grid gap-10 py-12 sm:py-14 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] lg:gap-12">
-          {/* Brand */}
           <div className="max-w-sm">
-
-            <Link
-              href={logo}
-              className="flex shrink-0 items-center"
-            >
+            <Link href="/" className="flex shrink-0 items-center">
               <div className="flex h-16 w-24 items-center justify-center">
-                <Image
-                  src={logo}
-                  alt="Service Support"
-                  width={140}
-                  height={70}
-                  className="h-18 w-33 object-contain"
-                  priority
-                />
+                <Image src={logo} alt="Service Support" width={140} height={70} className="h-18 w-33 object-contain" priority />
               </div>
             </Link>
 
@@ -85,7 +64,6 @@ export default function Footer({ role = "user" }) {
               resolve service requests with real-time support.
             </p>
 
-            {/* Social Icons */}
             <div className="mt-6 flex items-center gap-2">
               <a href="#" aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-sidebar-muted transition hover:bg-white/15 hover:text-white">
                 <FiFacebook size={16} />
@@ -105,7 +83,6 @@ export default function Footer({ role = "user" }) {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div>
             <h3 className="text-sm font-semibold text-white">Quick Links</h3>
 
@@ -120,7 +97,6 @@ export default function Footer({ role = "user" }) {
             </ul>
           </div>
 
-          {/* Support */}
           <div>
             <h3 className="text-sm font-semibold text-white">Support</h3>
 
@@ -135,12 +111,10 @@ export default function Footer({ role = "user" }) {
             </ul>
           </div>
 
-          {/* Contact */}
           <div>
             <h3 className="text-sm font-semibold text-white">Get In Touch</h3>
 
             <div className="mt-5 space-y-4">
-              {/* Email */}
               <div className="flex gap-3">
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-accent-light">
                   <FiMail size={15} />
@@ -148,14 +122,12 @@ export default function Footer({ role = "user" }) {
 
                 <div>
                   <p className="text-xs text-sidebar-muted">Email</p>
-
                   <a href="mailto:support@servicesupport.com" className="mt-0.5 block text-sm text-white transition hover:text-accent-light">
                     support@servicesupport.com
                   </a>
                 </div>
               </div>
 
-              {/* Phone */}
               <div className="flex gap-3">
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-accent-light">
                   <FiPhone size={15} />
@@ -163,14 +135,12 @@ export default function Footer({ role = "user" }) {
 
                 <div>
                   <p className="text-xs text-sidebar-muted">Phone</p>
-
                   <a href="tel:+919999999999" className="mt-0.5 block text-sm text-white transition hover:text-accent-light">
                     +91 99999 99999
                   </a>
                 </div>
               </div>
 
-              {/* Location */}
               <div className="flex gap-3">
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-accent-light">
                   <FiMapPin size={15} />
@@ -178,15 +148,13 @@ export default function Footer({ role = "user" }) {
 
                 <div>
                   <p className="text-xs text-sidebar-muted">Location</p>
-
                   <p className="mt-0.5 text-sm text-white">Gujarat, India</p>
                 </div>
               </div>
             </div>
 
-            {/* CTA */}
             {!isStaff && (
-              <Link href="/request/create" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-brand transition hover:bg-accent-soft">
+              <Link href="/user/requests/create" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-brand transition hover:bg-accent-soft">
                 Create Request
                 <FiArrowRight size={15} />
               </Link>
@@ -216,6 +184,6 @@ export default function Footer({ role = "user" }) {
           </div>
         </div>
       </div>
-    </motion.footer>
+    </footer>
   );
 }

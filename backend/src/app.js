@@ -15,6 +15,8 @@ import http from "http"
 import { initSocket } from './socket/initSocket.js';
 import apiRateLimit from './middleware/apiRateLimit.js';
 import { startJobs } from './jobs/index.js';
+import { seedCategories } from './seed/seedCategory.js';
+import { seedSeptemberServiceRequests } from './seed/seedServiceREq.js';
 
 
 
@@ -48,7 +50,9 @@ app.use(express.static("public"))
 
 // seedAdmin()
 // seedUsersAndStaff()
-// seedOctoberRequests()
+// seedCategories()
+// seedServiceRequests()
+// seedSeptemberServiceRequests()
 
 app.get("/",(req,res)=>res.redirect("/admin/login"))
 

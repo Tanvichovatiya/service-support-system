@@ -5,36 +5,26 @@ import crypto from "crypto";
 import bcrypt from "bcrypt"
 import redisServices from "../../services/redis/redisServices.js";
 import { redisKeys } from "../../utils/redisKey.js";
+import { buildRegexSearch, getPagination } from "../../utils/queryHelper.js";
+import { toObjectId } from "../../utils/convertToObjectId.js";
 
 export const getAllUsers = async (req, res) => {
   try {
-    const { search = "", status = "all" } = req.query;
+    const { search = "" } = req.query;
+   
+    const { page, limit, skip } = getPagination(req.query, 6);
 
-    const page = Number(req.query.page) || 1;
-    const limit = 6;
-    const skip = (page - 1) * limit;
+    const matchStage ={ role:"user",isDeleted:false}
+  
+    const searchStage = buildRegexSearch(search, ["firstname", "lastname"]);
 
-    const matchStage = {
-      role: "user",
-    };
-
-    if (status === "active") {
-      matchStage.isActive = true;
+    if (searchStage) {
+      Object.assign(matchStage, searchStage);
     }
-
-    if (status === "inactive") {
-      matchStage.isActive = false;
-    }
-
-    if (search.trim()) {
-      const searchRegex = new RegExp(search.trim(), "i");
-
-      matchStage.$or = [{ firstname: searchRegex }, { lastname: searchRegex }];
-    }
-
+   
     const aggPipeline = [
       {
-        $match: matchStage,
+        $match:matchStage
       },
 
       {
@@ -92,27 +82,23 @@ export const getAllUsers = async (req, res) => {
     const result = await userServices.getAggData(aggPipeline);
 
     const users = result[0]?.users || [];
-
     const totalUsers = result[0]?.totalCount[0]?.count || 0;
-
     const totalPages = Math.ceil(totalUsers / limit);
 
     return res.render("admin/user/index", {
       users,
 
       pagination: {
-        currentPage: page, // FIX
+        currentPage: page,
         totalPages,
         totalUsers,
         limit,
-
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1,
       },
 
       filters: {
         search,
-        status,
       },
     });
   } catch (error) {
@@ -129,7 +115,7 @@ export const getUserById = async (req, res) => {
     const aggPipeline = [
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(id),
+          _id: toObjectId(id),
           role: "user",
         },
       },
@@ -201,17 +187,6 @@ export const getUserById = async (req, res) => {
             },
           },
 
-          cancelledRequests: {
-            $size: {
-              $filter: {
-                input: "$serviceRequests",
-                as: "request",
-                cond: {
-                  $eq: ["$$request.status", "cancelled"],
-                },
-              },
-            },
-          },
         },
       },
 
@@ -228,11 +203,6 @@ export const getUserById = async (req, res) => {
 
     const user = result[0];
 
-    // return successResponse(res, {
-    //   statusCode: 200,
-    //   message: "User fetched successfully",
-    //   data: user,
-    // });
     return res.render("admin/user/singleuser", { data: user });
   } catch (error) {
     console.log("getUserById error:", error);
@@ -249,23 +219,13 @@ export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const user = await userServices.getDatabyId({
-      _id: id,
-      role: "user",
-    });
+  
 
-    if (!user.isActive) {
-      return errorResponse(res, {
-        statusCode: 400,
-        message: "User is already inactive",
-      });
-    }
-
-    const updatedUser = await userServices.updateOne(
+     await userServices.updateOne(
       { _id: id },
       {
         $set: {
-          isActive: false,
+          isDeleted: true,
         },
       },
     );
@@ -273,7 +233,7 @@ export const deleteUser = async (req, res) => {
     return successResponse(res, {
       statusCode: 200,
       message: "User delete successfully",
-      data: updatedUser,
+    
     });
   } catch (error) {
     console.log("deleteUser error:", error);
@@ -314,7 +274,7 @@ export const addUser = async (req, res) => {
       role: "user",
 
       isEmailVerified: true,
-      isActive: true,
+     
 
       passwordSetupToken: null,
       passwordSetupExpires: null,

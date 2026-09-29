@@ -1,9 +1,4 @@
 
-
-/* =========================================================
-   HISTORY ACTION
-========================================================= */
-
 export const ACTION_CONFIG = {
   SERVICE_REQUEST_CREATED: {
     label: "Request Created",
@@ -55,11 +50,6 @@ export const ACTION_CONFIG = {
   },
 };
 
-
-/* =========================================================
-   STAFF NAME
-========================================================= */
-
 export const getStaffName = (staff) => {
   if (!staff) {
     return "Unknown Staff";
@@ -73,10 +63,13 @@ export const getStaffName = (staff) => {
   return name || "Unknown Staff";
 };
 
+export const getStaffNames = (staffList) => {
+  if (!Array.isArray(staffList) || staffList.length === 0) {
+    return [];
+  }
 
-/* =========================================================
-   USER NAME
-========================================================= */
+  return staffList.map(getStaffName);
+};
 
 export const getUserName = (user) => {
   if (!user) {
@@ -89,11 +82,6 @@ export const getUserName = (user) => {
     .trim();
 };
 
-
-/* =========================================================
-   FORMAT STATUS
-========================================================= */
-
 export const formatStatus = (status) => {
   if (!status) {
     return "";
@@ -103,11 +91,6 @@ export const formatStatus = (status) => {
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
-
-
-/* =========================================================
-   FORMAT ACTION LABEL
-========================================================= */
 
 export const formatActionLabel = (action) => {
   if (!action) {
@@ -120,11 +103,6 @@ export const formatActionLabel = (action) => {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-
-/* =========================================================
-   FORMAT OBJECT KEY
-========================================================= */
-
 export const formatKeyLabel = (key) => {
   if (!key) {
     return "";
@@ -136,17 +114,8 @@ export const formatKeyLabel = (key) => {
     .replace(/^./, (char) => char.toUpperCase());
 };
 
-
-/* =========================================================
-   FORMAT VALUE
-========================================================= */
-
 export const formatValue = (value) => {
-  if (
-    value === null ||
-    value === undefined ||
-    typeof value !== "object"
-  ) {
+  if (!value || typeof value !== "object") {
     return [];
   }
 
@@ -156,6 +125,7 @@ export const formatValue = (value) => {
         item !== null &&
         item !== undefined &&
         key !== "assignedStaff" &&
+        key !== "assignedStaffIds" &&
         key !== "assignedStaffId" &&
         key !== "status",
     )
@@ -163,7 +133,7 @@ export const formatValue = (value) => {
       const label = formatKeyLabel(key);
 
       if (Array.isArray(item)) {
-        return `${label}: ${item.length} file${
+        return `${label}: ${item.length} item${
           item.length === 1 ? "" : "s"
         }`;
       }
@@ -175,11 +145,6 @@ export const formatValue = (value) => {
       return `${label}: ${item}`;
     });
 };
-
-
-/* =========================================================
-   HISTORY DESCRIPTION
-========================================================= */
 
 export const getHistoryDescription = (item) => {
   if (!item) {
@@ -193,23 +158,34 @@ export const getHistoryDescription = (item) => {
       return "The service request was created.";
 
     case "SERVICE_REQUEST_ASSIGNED": {
-      const staffName = getStaffName(
-        newValue?.assignedStaff,
-      );
+      const staff = newValue?.assignedStaff || [];
+      const names = getStaffNames(staff);
 
-      return `The service request was assigned to ${staffName}.`;
+      if (names.length === 0) {
+        return "The service request was assigned to staff.";
+      }
+
+      return `The service request was assigned to ${names.join(", ")}.`;
     }
 
     case "SERVICE_REQUEST_REASSIGNED": {
-      const oldStaffName = getStaffName(
-        oldValue?.assignedStaff,
-      );
+      const oldStaff = oldValue?.assignedStaff || [];
+      const newStaff = newValue?.assignedStaff || [];
 
-      const newStaffName = getStaffName(
-        newValue?.assignedStaff,
-      );
+      const oldNames = getStaffNames(oldStaff);
+      const newNames = getStaffNames(newStaff);
 
-      return `The service request was reassigned from ${oldStaffName} to ${newStaffName}.`;
+      const previous =
+        oldNames.length > 0
+          ? oldNames.join(", ")
+          : "previous staff";
+
+      const current =
+        newNames.length > 0
+          ? newNames.join(", ")
+          : "new staff";
+
+      return `The service request was reassigned from ${previous} to ${current}.`;
     }
 
     case "SERVICE_REQUEST_STATUS_UPDATED": {
@@ -239,11 +215,6 @@ export const getHistoryDescription = (item) => {
   }
 };
 
-
-/* =========================================================
-   ASSIGNMENT ACTION CHECK
-========================================================= */
-
 export const isAssignmentAction = (action) => {
   return (
     action === "SERVICE_REQUEST_ASSIGNED" ||
@@ -251,31 +222,36 @@ export const isAssignmentAction = (action) => {
   );
 };
 
-
-/* =========================================================
-   ASSIGNMENT DATA
-========================================================= */
-
 export const getAssignmentDetails = (item) => {
   if (!item || !isAssignmentAction(item.action)) {
     return null;
   }
 
-  const oldStaff = item.oldValue?.assignedStaff || null;
-  const newStaff = item.newValue?.assignedStaff || null;
+  const oldStaff = Array.isArray(item.oldValue?.assignedStaff)
+    ? item.oldValue.assignedStaff
+    : [];
+
+  const newStaff = Array.isArray(item.newValue?.assignedStaff)
+    ? item.newValue.assignedStaff
+    : [];
+
+  const oldStaffIds = Array.isArray(item.oldValue?.assignedStaffIds)
+    ? item.oldValue.assignedStaffIds
+    : [];
+
+  const newStaffIds = Array.isArray(item.newValue?.assignedStaffIds)
+    ? item.newValue.assignedStaffIds
+    : [];
 
   return {
     oldStaff,
     newStaff,
+    oldStaffIds,
+    newStaffIds,
     isReassigned:
       item.action === "SERVICE_REQUEST_REASSIGNED",
   };
 };
-
-
-/* =========================================================
-   STATUS CHANGE CHECK
-========================================================= */
 
 export const hasStatusChange = (item) => {
   return Boolean(
@@ -283,11 +259,6 @@ export const hasStatusChange = (item) => {
       item?.newValue?.status,
   );
 };
-
-
-/* =========================================================
-   CREATED REQUEST DETAILS
-========================================================= */
 
 export const getCreatedRequestDetails = (item) => {
   if (
@@ -302,11 +273,6 @@ export const getCreatedRequestDetails = (item) => {
   );
 };
 
-
-/* =========================================================
-   GENERIC CHANGES
-========================================================= */
-
 export const getGenericChanges = (item) => {
   if (!item) {
     return {
@@ -315,9 +281,6 @@ export const getGenericChanges = (item) => {
     };
   }
 
-  /*
-   * Created request has its own UI.
-   */
   if (item.action === "SERVICE_REQUEST_CREATED") {
     return {
       oldValues: [],
@@ -325,9 +288,6 @@ export const getGenericChanges = (item) => {
     };
   }
 
-  /*
-   * Assignment has its own UI.
-   */
   if (isAssignmentAction(item.action)) {
     return {
       oldValues: [],
@@ -335,9 +295,6 @@ export const getGenericChanges = (item) => {
     };
   }
 
-  /*
-   * Status change has its own UI.
-   */
   if (hasStatusChange(item)) {
     return {
       oldValues: [],
@@ -351,11 +308,6 @@ export const getGenericChanges = (item) => {
   };
 };
 
-
-/* =========================================================
-   GET ACTION CONFIG
-========================================================= */
-
 export const getActionConfig = (action) => {
   return (
     ACTION_CONFIG[action] || {
@@ -367,45 +319,22 @@ export const getActionConfig = (action) => {
   );
 };
 
-
-/* =========================================================
-   FORMAT HISTORY ITEM
-   ---------------------------------------------------------
-   This is useful when you want one common function that
-   prepares everything required by the UI.
-========================================================= */
-
 export const formatHistoryItem = (item) => {
   if (!item) {
     return null;
   }
 
-  const config = getActionConfig(item.action);
-
   return {
     ...item,
-
-    actionConfig: config,
-
+    actionConfig: getActionConfig(item.action),
     userName: getUserName(item.userId),
-
     description: getHistoryDescription(item),
-
     assignment: getAssignmentDetails(item),
-
     statusChange: hasStatusChange(item),
-
     createdDetails: getCreatedRequestDetails(item),
-
     genericChanges: getGenericChanges(item),
-
-    oldValues: formatValue(item.oldValue),
-
-    newValues: formatValue(item.newValue),
   };
 };
-
-
 
 export const formatRequestHistory = (data) => {
   if (!data) {
@@ -417,7 +346,6 @@ export const formatRequestHistory = (data) => {
 
   return {
     request: data.request || null,
-
     history: Array.isArray(data.history)
       ? data.history
           .map(formatHistoryItem)

@@ -36,11 +36,11 @@ export default function RegisterPage() {
                 alt="Service Support logo"
                 width={40}
                 height={40}
-                className=" w-22 h-14"
+                className=" w-40 h-18"
                 priority
               />
 
-              <div>
+              {/* <div>
                 <p className="text-sm font-semibold text-white">
                   Service Support
                 </p>
@@ -48,7 +48,7 @@ export default function RegisterPage() {
                 <p className="text-xs text-white/50">
                   Management System
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
 

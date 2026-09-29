@@ -16,11 +16,24 @@ const serviceRequestSchema = new mongoose.Schema(
       index: true,
     },
 
-    assignedStaffId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Staff",
-      default: null,
-      index: true,
+    assignedStaffIds: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Staff",
+        },
+      ],
+      default: [],
+    },
+
+    acceptedStaffIds: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Staff",
+        },
+      ],
+      default: [],
     },
 
     title: {
@@ -32,7 +45,6 @@ const serviceRequestSchema = new mongoose.Schema(
 
     description: {
       type: String,
-      required: true,
       trim: true,
     },
 
@@ -50,12 +62,6 @@ const serviceRequestSchema = new mongoose.Schema(
       index: true,
     },
 
-    attachments: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Attachment",
-      },
-    ],
     isOverdue: {
       type: Boolean,
       default: false,
@@ -66,6 +72,7 @@ const serviceRequestSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
     assignedAt: {
       type: Date,
       default: null,
@@ -79,6 +86,11 @@ const serviceRequestSchema = new mongoose.Schema(
     completedAt: {
       type: Date,
       default: null,
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

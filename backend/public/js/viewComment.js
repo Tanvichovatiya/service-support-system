@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <button
                     type="button"
-                    class="download-comment-attachment flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-text-secondary transition hover:bg-brand/10 hover:text-brand focus:outline-none focus:ring-4 focus:ring-brand/10"
+                    class="download-comment-attachment flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary transition hover:bg-brand/10 hover:text-brand focus:outline-none focus:ring-4 focus:ring-brand/10 cursor-pointer"
                     data-attachment-id="${escapeHtml(
                         attachmentId
                     )}"
@@ -403,10 +403,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     message
                         ? `
                             <div
-                                class="mt-4 rounded-lg border border-border-light bg-surface px-3.5 py-3"
+                                class="mt-4 rounded-lg border border-border-light bg-surface px-3.5 py-2"
                             >
                                 <p
-                                    class="whitespace-pre-wrap break-words text-sm leading-6 text-text-secondary"
+                                    class="text-left break-words text-sm leading-6 text-brand"
                                 >
                                     ${escapeHtml(message)}
                                 </p>

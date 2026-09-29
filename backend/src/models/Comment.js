@@ -22,12 +22,6 @@ const commentSchema = new mongoose.Schema(
       trim: true,
       maxlength: 2000,
     },
-    attachments: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Attachment",
-      },
-    ],
   },
   {
     timestamps: true,

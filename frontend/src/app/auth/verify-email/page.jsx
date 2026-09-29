@@ -114,13 +114,13 @@ const VerifyEmailPage = () => {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+    <main className="flex min-h-screen items-center justify-center border-2 border-brand bg-background px-4 py-10">
       <div className="w-full max-w-md">
 
-        {/* Card */}
+       
         <div className="rounded-2xl border border-border bg-card p-6 shadow-lg sm:p-8">
 
-          {/* Icon */}
+       
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-brand/10 text-brand">
             <FaEnvelope size={26} />
           </div>

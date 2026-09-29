@@ -64,13 +64,21 @@ const ServiceRequestServices = {
       throw error;
     }
   },
+  findOneAndUpdate: async (filter, update, options = {}) => {
+    try {
+      return await ServiceRequest.findOneAndUpdate(filter, update, options);
+    } catch (error) {
+      console.error("ServiceRequest findOneAndUpdate error:", error);
+      throw error;
+    }
+  },
   updateOne: async (filter = {}, update = {}) => {
     try {
       const result = await ServiceRequest.updateOne(filter, update);
 
-      if (result.matchedCount == 0) {
-        throw new Error("document not found");
-      }
+      // if (result.matchedCount == 0) {
+      //   throw new Error("document not found");
+      // }
       return result;
     } catch (error) {
       console.log("mongoose err", error);
@@ -110,8 +118,8 @@ const ServiceRequestServices = {
   },
   getPendingOverdueRequests: async () => {
     try {
-       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      // const twentyFourHoursAgo = new Date(Date.now() - 3* 60 * 1000);
+      // const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const twentyFourHoursAgo = new Date(Date.now() - 3* 60 * 1000);
 
       const requests = await ServiceRequest.find({
         status: "pending",

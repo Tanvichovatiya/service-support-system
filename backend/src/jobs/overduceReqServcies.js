@@ -1,27 +1,27 @@
 import { auditLogServices } from "../services/auditLogServices.js";
-import notificationServices from "../services/notificationServices.js";
 import ServiceRequestServices from "../services/ServiceRequestServices.js";
 import { userServices } from "../services/userServices.js";
+import { sendNotification } from "../utils/sendNotification.js";
 
 const processPendingOverdueRequest = async () => {
   try {
     const overdueRequests =
       await ServiceRequestServices.getPendingOverdueRequests();
 
-    console.log("Pending overdue request:", overdueRequests.length);
+    console.log("Pending overdue requests:", overdueRequests.length);
 
     if (overdueRequests.length === 0) {
-      return {
-        found: 0,
-        processed: 0,
-      };
+      return { found: 0, processed: 0 };
     }
 
     const admin = await userServices.getdatabyfindOne(
-      { role: "admin", isActive: true },
-      "_id ",
+      { role: "admin" },
+      "_id",
     );
 
+    if (!admin) {
+      throw new Error("Admin not found");
+    }
 
     let processed = 0;
 
@@ -29,7 +29,7 @@ const processPendingOverdueRequest = async () => {
       try {
         const overdueAt = new Date();
 
-        const updatedRequest = await ServiceRequestServices.updateOne(
+        const updatedRequest = await ServiceRequestServices.findOneAndUpdate(
           {
             _id: request._id,
             status: "pending",
@@ -41,20 +41,34 @@ const processPendingOverdueRequest = async () => {
               overdueAt,
             },
           },
+          {
+            new: true,
+          },
         );
 
         if (!updatedRequest) {
           continue;
         }
 
-        const notification =
-          await notificationServices.createNotification({
-            receiverId: admin._id,
-            type: "service_request_overdue",
-            message: `Service request "${request.title}" has been pending for more than 24 hours.`,
-            requestId: request._id,
-            isRead: false,
-          });
+        await sendNotification({
+          receiverId: admin._id,
+          requestId: request._id,
+          type: "service_request_overdue",
+          data: {
+            recipientType: "admin",
+          },
+          room: "admins",
+        });
+
+        await sendNotification({
+          receiverId: request.userId,
+          requestId: request._id,
+          type: "service_request_overdue",
+          data: {
+            recipientType: "user",
+          },
+          room: `user:${request.userId}`,
+        });
 
         await auditLogServices.create({
           userId: admin._id,
@@ -77,12 +91,9 @@ const processPendingOverdueRequest = async () => {
         processed++;
 
         console.log(`Overdue request processed: ${request._id}`);
-        console.log(
-          `Notification created: ${notification.notification._id}`,
-        );
       } catch (error) {
         console.error(
-          `Failed to process request ${request._id}:`,
+          `Failed to process overdue request ${request._id}:`,
           error,
         );
       }
@@ -93,7 +104,7 @@ const processPendingOverdueRequest = async () => {
       processed,
     };
   } catch (error) {
-    console.log("Process pending overdue request:", error);
+    console.error("Process pending overdue request error:", error);
     throw error;
   }
 };

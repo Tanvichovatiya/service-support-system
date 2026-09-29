@@ -28,10 +28,7 @@ const staffSchema = new mongoose.Schema(
         trim: true,
       },
     ],
-    isdeleted: {
-      type: Boolean,
-      default: false,
-    },
+   
   },
 
   {

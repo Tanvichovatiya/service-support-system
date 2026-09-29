@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useSelector } from "react-redux";
@@ -8,7 +9,6 @@ import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
 
 const ChatLayout = ({ contactType }) => {
-  
   const { staff, users } = useSelector((state) => state.user);
   const { selectedContact } = useSelector((state) => state.chat);
 
@@ -16,32 +16,11 @@ const ChatLayout = ({ contactType }) => {
 
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-page-background">
-      
-   
-      <aside
-        className={`
-          h-full w-full shrink-0
-          border-r border-border
-          bg-surface
-
-          md:w-[320px]
-          lg:w-[350px]
-
-          ${selectedContact ? "hidden md:flex" : "flex"}
-        `}
-      >
+      <aside className={`h-full w-full shrink-0 border-r border-border bg-surface md:w-[320px] lg:w-[350px] ${selectedContact ? "hidden md:flex" : "flex"}`}>
         <ChatSidebar contacts={contacts} />
       </aside>
 
-     
-      <main
-        className={`
-          min-w-0 flex-1 flex-col
-          bg-brand-soft
-
-          ${selectedContact ? "flex" : "hidden md:flex"}
-        `}
-      >
+      <main className={`min-w-0 flex-1 flex-col bg-brand-soft ${selectedContact ? "flex" : "hidden md:flex"}`}>
         {selectedContact ? (
           <>
             <ChatHeader />

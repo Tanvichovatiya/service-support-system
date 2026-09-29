@@ -101,6 +101,17 @@ export const attachmentServices = {
     }
   },
 
+  updateMany: async (filter = {}, update = {}) => {
+  try {
+    const result = await Attachment.updateMany(filter, update);
+
+    return result;
+  } catch (error) {
+    console.log("updateMany error:", error);
+    throw error;
+  }
+},
+
   deleteOne: async (filter = {}) => {
     try {
       const result = await Attachment.deleteOne(filter);
@@ -134,3 +145,4 @@ export const attachmentServices = {
     }
   },
 };
+

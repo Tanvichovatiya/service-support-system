@@ -1,30 +1,24 @@
-import mongoose from "mongoose";
 import { auditLogServices } from "../services/auditLogServices.js";
-import { categoryServices } from "../services/categoryServices.js";
+
 import ServiceRequestServices from "../services/ServiceRequestServices.js";
 import { userServices } from "../services/userServices.js";
-import { getIo } from "../socket/initSocket.js";
+
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
 
-import NotificationServices from "../services/notificationServices.js";
 import staffServices from "../services/staffServcies.js";
-import notificationServices from "../services/notificationServices.js";
 
-import { attachmentServices } from "../services/attachmentServices.js";
 import { saveUploadedFiles } from "../utils/fileUploadHelper.js";
 import { redisKeys } from "../utils/redisKey.js";
 import redisServices from "../services/redis/redisServices.js";
+import { sendNotification } from "../utils/sendNotification.js";
+import { buildRegexSearch, getPagination } from "../utils/queryHelper.js";
+import { toObjectId } from "../utils/convertToObjectId.js";
 
 export const createRequest = async (req, res) => {
   try {
     const userId = req.user.id;
 
     const { categoryId, title, description, priority = "medium" } = req.body;
-
-    // const category = await categoryServices.getdatabyfindOne({
-    //   _id: categoryId,
-    //   isActive: true,
-    // });
 
     const files = Array.isArray(req.files) ? req.files : [];
 
@@ -34,11 +28,7 @@ export const createRequest = async (req, res) => {
       title,
       description,
       priority,
-      attachments: [],
     });
-
-    await redisServices.delete(redisKeys.category.all());
-    await redisServices.delete(redisKeys.category.byId(categoryId));
 
     let attachmentIds = [];
 
@@ -47,18 +37,8 @@ export const createRequest = async (req, res) => {
         attachmentIds = await saveUploadedFiles({
           files,
           folder: "service-requests",
+          requestId: serviceRequest._id,
         });
-
-        await ServiceRequestServices.updateOne(
-          {
-            _id: serviceRequest._id,
-          },
-          {
-            $set: {
-              attachments: attachmentIds,
-            },
-          },
-        );
       } catch (error) {
         console.log("Request attachment error:", error);
 
@@ -72,15 +52,10 @@ export const createRequest = async (req, res) => {
 
     await auditLogServices.create({
       userId,
-
       action: "SERVICE_REQUEST_CREATED",
-
       entity: "ServiceRequest",
-
       entityId: serviceRequest._id,
-
       oldValue: null,
-
       newValue: {
         userId,
         categoryId,
@@ -89,43 +64,38 @@ export const createRequest = async (req, res) => {
         priority,
         attachments: attachmentIds,
       },
-
       ipAddress: req.ip,
-
       userAgent: req.get("user-agent"),
     });
 
     const admin = await userServices.getdatabyfindOne({
       role: "admin",
-      isActive: true,
+      isDeleted: false,
     });
 
-    if (admin && req.user.role != "admin") {
-      const notification = await notificationServices.createNotification({
+    if (admin) {
+      await sendNotification({
         receiverId: admin._id,
         senderId: userId,
         requestId: serviceRequest._id,
         type: "new_request",
         message: `New service request "${serviceRequest.title}" has been created.`,
-      });
-
-      const io = getIo();
-
-      io.to("admins").emit("service-request:new", {
-        notification: notification.notification,
-        unreadCount: notification.unreadCount,
+        room: "admins",
+        event: "service-request:new",
       });
     }
 
-    await redisServices.delete(redisKeys.dashboard.stats());
+    await Promise.all([
+      redisServices.delete(redisKeys.dashboard.stats()),
+      redisServices.delete(redisKeys.category.byId(categoryId)),
+    ]);
 
     return successResponse(res, {
       statusCode: 201,
       message: "Service request created successfully.",
     });
-
   } catch (error) {
-    console.log(" error:", error);
+    console.log("Create request error:", error);
 
     return errorResponse(res, {
       statusCode: 500,
@@ -138,30 +108,38 @@ export const createRequest = async (req, res) => {
 export const getMyRequests = async (req, res) => {
   try {
     const userId = req.user.id;
-    const page = Number(req.query.page) || 1;
-    const limit = 6;
+
+    const { page, limit, skip } = getPagination(req.query, 6);
+
     const search = req.query.search || "";
     const status = req.query.status || "";
 
-    const skip = (page - 1) * limit;
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-
     const matchStage = {
-      userId: userObjectId,
+      userId: toObjectId(userId),
+      isDeleted: false,
     };
 
     if (status) {
       matchStage.status = status;
     }
 
-    const aggpipline = [
+    const searchStage = buildRegexSearch(search, [
+      "title",
+      "description",
+      "category.name",
+    ]);
+
+    const pipeline = [
       {
         $match: matchStage,
       },
+
       {
         $lookup: {
           from: "categories",
-          let: { categoryId: "$categoryId" },
+          let: {
+            categoryId: "$categoryId",
+          },
           pipeline: [
             {
               $match: {
@@ -181,34 +159,15 @@ export const getMyRequests = async (req, res) => {
           as: "category",
         },
       },
+
       {
         $unwind: "$category",
       },
-      ...(search.trim()
+
+      ...(searchStage
         ? [
             {
-              $match: {
-                $or: [
-                  {
-                    title: {
-                      $regex: search.trim(),
-                      $options: "i",
-                    },
-                  },
-                  {
-                    description: {
-                      $regex: search.trim(),
-                      $options: "i",
-                    },
-                  },
-                  {
-                    "category.name": {
-                      $regex: search.trim(),
-                      $options: "i",
-                    },
-                  },
-                ],
-              },
+              $match: searchStage,
             },
           ]
         : []),
@@ -218,6 +177,7 @@ export const getMyRequests = async (req, res) => {
           createdAt: -1,
         },
       },
+
       {
         $facet: {
           requests: [
@@ -227,7 +187,6 @@ export const getMyRequests = async (req, res) => {
             {
               $limit: limit,
             },
-
             {
               $project: {
                 _id: 1,
@@ -255,9 +214,12 @@ export const getMyRequests = async (req, res) => {
         },
       },
     ];
-    const result = await ServiceRequestServices.getAggData(aggpipline);
-    const requests = result[0].requests || [];
+
+    const result = await ServiceRequestServices.getAggData(pipeline);
+
+    const requests = result[0]?.requests || [];
     const totalreq = result[0]?.totalCount[0]?.count || 0;
+
     const totalPages = Math.ceil(totalreq / limit);
 
     return successResponse(res, {
@@ -272,10 +234,11 @@ export const getMyRequests = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("err:", error);
+    console.log("getMyRequests error:", error);
+
     return errorResponse(res, {
       statusCode: 500,
-      message: "server err",
+      message: "Failed to fetch service requests.",
       errors: error.message,
     });
   }
@@ -286,25 +249,201 @@ export const getMyRequestById = async (req, res) => {
     const userId = req.user.id;
     const { reqid } = req.params;
 
-    console.log("reqid:", reqid);
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-    const requestObjectId = new mongoose.Types.ObjectId(reqid);
+    // const pipeline = [
+    //   {
+    //     $match: {
+    //       _id: toObjectId(reqid),
+    //       userId: toObjectId(userId),
+    //       isDeleted: false,
+    //     },
+    //   },
 
+    //   {
+    //     $lookup: {
+    //       from: "categories",
+    //       let: {
+    //         categoryId: "$categoryId",
+    //       },
+    //       pipeline: [
+    //         {
+    //           $match: {
+    //             $expr: {
+    //               $eq: ["$_id", "$$categoryId"],
+    //             },
+    //           },
+    //         },
+    //         {
+    //           $project: {
+    //             _id: 1,
+    //             name: 1,
+    //             description: 1,
+    //             isActive: 1,
+    //           },
+    //         },
+    //       ],
+    //       as: "category",
+    //     },
+    //   },
+
+    //   {
+    //     $unwind: {
+    //       path: "$category",
+    //       preserveNullAndEmptyArrays: true,
+    //     },
+    //   },
+
+    //   {
+    //     $lookup: {
+    //       from: "staffs",
+    //       let: {
+    //         assignedStaffIds: "$assignedStaffIds",
+    //       },
+    //       pipeline: [
+    //         {
+    //           $match: {
+    //             $expr: {
+    //               $in: [
+    //                 "$_id",
+    //                 {
+    //                   $ifNull: ["$$assignedStaffIds", []],
+    //                 },
+    //               ],
+    //             },
+    //           },
+    //         },
+
+    //         {
+    //           $lookup: {
+    //             from: "users",
+    //             let: {
+    //               staffUserId: "$userId",
+    //             },
+    //             pipeline: [
+    //               {
+    //                 $match: {
+    //                   $expr: {
+    //                     $eq: ["$_id", "$$staffUserId"],
+    //                   },
+    //                 },
+    //               },
+    //               {
+    //                 $project: {
+    //                   _id: 1,
+    //                   firstname: 1,
+    //                   lastname: 1,
+    //                   profilePic: 1,
+    //                 },
+    //               },
+    //             ],
+    //             as: "user",
+    //           },
+    //         },
+
+    //         {
+    //           $unwind: {
+    //             path: "$user",
+    //             preserveNullAndEmptyArrays: true,
+    //           },
+    //         },
+
+    //         {
+    //           $project: {
+    //             _id: 1,
+    //             employeeId: 1,
+    //             department: 1,
+    //             skills: 1,
+    //             user: 1,
+    //           },
+    //         },
+    //       ],
+    //       as: "assignedStaff",
+    //     },
+    //   },
+
+    //   {
+    //     $lookup: {
+    //       from: "attachments",
+    //       let: {
+    //         requestId: "$_id",
+    //       },
+    //       pipeline: [
+    //         {
+    //           $match: {
+    //             $expr: {
+    //               $eq: ["$requestId", "$$requestId"],
+    //             },
+    //           },
+    //         },
+
+    //         {
+    //           $project: {
+    //             _id: 1,
+    //             originalName: 1,
+    //             fileName: 1,
+    //             filePath: 1,
+    //             mimeType: 1,
+    //             size: 1,
+    //             createdAt: 1,
+    //           },
+    //         },
+
+    //         {
+    //           $sort: {
+    //             createdAt: 1,
+    //           },
+    //         },
+    //       ],
+    //       as: "attachments",
+    //     },
+    //   },
+
+    //   {
+    //     $project: {
+    //       _id: 1,
+    //       userId: 1,
+
+    //       title: 1,
+    //       description: 1,
+
+    //       categoryId: 1,
+    //       category: 1,
+
+    //       priority: 1,
+    //       status: 1,
+
+    //       // assignedStaffIds: 1,
+    //       // acceptedStaffIds: 1,
+    //       assignedStaff: 1,
+
+    //       attachments: 1,
+
+    //       isOverdue: 1,
+    //       overdueAt: 1,
+
+    //       assignedAt: 1,
+    //       startedAt: 1,
+    //       completedAt: 1,
+
+    //       createdAt: 1,
+    //       updatedAt: 1,
+    //     },
+    //   },
+    // ];
     const pipeline = [
       {
         $match: {
-          _id: requestObjectId,
-          userId: userObjectId,
+          _id: toObjectId(reqid),
+          userId: toObjectId(userId),
+          isDeleted: false,
         },
       },
+
       {
         $lookup: {
           from: "categories",
-
           let: {
             categoryId: "$categoryId",
           },
-
           pipeline: [
             {
               $match: {
@@ -313,7 +452,6 @@ export const getMyRequestById = async (req, res) => {
                 },
               },
             },
-
             {
               $project: {
                 _id: 1,
@@ -323,7 +461,6 @@ export const getMyRequestById = async (req, res) => {
               },
             },
           ],
-
           as: "category",
         },
       },
@@ -334,19 +471,21 @@ export const getMyRequestById = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
+
+      // Assigned Staff
       {
         $lookup: {
           from: "staffs",
-
           let: {
-            assignedStaffId: "$assignedStaffId",
+            assignedStaffIds: {
+              $ifNull: ["$assignedStaffIds", []],
+            },
           },
-
           pipeline: [
             {
               $match: {
                 $expr: {
-                  $eq: ["$_id", "$$assignedStaffId"],
+                  $in: ["$_id", "$$assignedStaffIds"],
                 },
               },
             },
@@ -354,11 +493,9 @@ export const getMyRequestById = async (req, res) => {
             {
               $lookup: {
                 from: "users",
-
                 let: {
                   staffUserId: "$userId",
                 },
-
                 pipeline: [
                   {
                     $match: {
@@ -367,17 +504,14 @@ export const getMyRequestById = async (req, res) => {
                       },
                     },
                   },
-
                   {
                     $project: {
-                      _id: 1,
                       firstname: 1,
                       lastname: 1,
                       profilePic: 1,
                     },
                   },
                 ],
-
                 as: "user",
               },
             },
@@ -392,43 +526,87 @@ export const getMyRequestById = async (req, res) => {
             {
               $project: {
                 _id: 1,
-                employeeId: 1,
                 department: 1,
-                skills: 1,
                 user: 1,
               },
             },
           ],
-
           as: "assignedStaff",
         },
       },
 
       {
-        $unwind: {
-          path: "$assignedStaff",
-          preserveNullAndEmptyArrays: true,
+        $lookup: {
+          from: "staffs",
+          let: {
+            acceptedStaffIds: {
+              $ifNull: ["$acceptedStaffIds", []],
+            },
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$_id", "$$acceptedStaffIds"],
+                },
+              },
+            },
+
+            {
+              $lookup: {
+                from: "users",
+                let: {
+                  staffUserId: "$userId",
+                },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$_id", "$$staffUserId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      firstname: 1,
+                      lastname: 1,
+                      profilePic: 1,
+                    },
+                  },
+                ],
+                as: "user",
+              },
+            },
+
+            {
+              $unwind: {
+                path: "$user",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+
+            {
+              $project: {
+                department: 1,
+                user: 1,
+              },
+            },
+          ],
+          as: "acceptedStaff",
         },
       },
 
       {
         $lookup: {
           from: "attachments",
-
           let: {
-            attachmentIds: "$attachments",
+            requestId: "$_id",
           },
-
           pipeline: [
             {
               $match: {
                 $expr: {
-                  $in: [
-                    "$_id",
-                    {
-                      $ifNull: ["$$attachmentIds", []],
-                    },
-                  ],
+                  $eq: ["$requestId", "$$requestId"],
                 },
               },
             },
@@ -444,115 +622,41 @@ export const getMyRequestById = async (req, res) => {
                 createdAt: 1,
               },
             },
-          ],
 
+            {
+              $sort: {
+                createdAt: 1,
+              },
+            },
+          ],
           as: "attachments",
         },
       },
 
-      // {
-      //   $lookup: {
-      //     from: "auditlogs",
-
-      //     let: {
-      //       requestId: "$_id",
-      //     },
-
-      //     pipeline: [
-      //       {
-      //         $match: {
-      //           $expr: {
-      //             $eq: ["$entityId", "$$requestId"],
-      //           },
-
-      //           entity: "ServiceRequest",
-      //         },
-      //       },
-
-      //       {
-      //         $lookup: {
-      //           from: "users",
-
-      //           let: {
-      //             actorId: "$userId",
-      //           },
-
-      //           pipeline: [
-      //             {
-      //               $match: {
-      //                 $expr: {
-      //                   $eq: ["$_id", "$$actorId"],
-      //                 },
-      //               },
-      //             },
-
-      //             {
-      //               $project: {
-      //                 _id: 1,
-      //                 firstname: 1,
-      //                 lastname: 1,
-      //                 role: 1,
-      //                 profilePic: 1,
-      //               },
-      //             },
-      //           ],
-
-      //           as: "actor",
-      //         },
-      //       },
-
-      //       {
-      //         $unwind: {
-      //           path: "$actor",
-      //           preserveNullAndEmptyArrays: true,
-      //         },
-      //       },
-
-      //       {
-      //         $project: {
-      //           _id: 1,
-      //           action: 1,
-      //           entity: 1,
-      //           entityId: 1,
-      //           oldValue: 1,
-      //           newValue: 1,
-      //           ipAddress: 1,
-      //           userAgent: 1,
-      //           createdAt: 1,
-      //           actor: 1,
-      //         },
-      //       },
-
-      //       {
-      //         $sort: {
-      //           createdAt: 1,
-      //         },
-      //       },
-      //     ],
-
-      //     as: "history",
-      //   },
-      // },
-
       {
         $project: {
           _id: 1,
-
           userId: 1,
 
           title: 1,
           description: 1,
 
-          categoryId: 1,
+          // categoryId: 1,
           category: 1,
 
           priority: 1,
           status: 1,
 
+          // assignedStaffIds: 1,
+          assignedStaff: 1,
+
+          // acceptedStaffIds: 1,
+          acceptedStaff: 1,
+
           attachments: 1,
 
-          assignedStaffId: 1,
-          assignedStaff: 1,
+          isOverdue: 1,
+          overdueAt: 1,
 
           assignedAt: 1,
           startedAt: 1,
@@ -560,19 +664,16 @@ export const getMyRequestById = async (req, res) => {
 
           createdAt: 1,
           updatedAt: 1,
-
-          // history: 1,
         },
       },
     ];
-
     const result = await ServiceRequestServices.getAggData(pipeline);
 
     return successResponse(res, {
       statusCode: 200,
       message: "Service request fetched successfully",
       data: {
-        serviceRequest: result[0],
+        serviceRequest: result[0] || null,
       },
     });
   } catch (error) {
@@ -589,21 +690,17 @@ export const getMyRequestById = async (req, res) => {
 export const getAllReqofStaff = async (req, res) => {
   try {
     const { id: userId } = req.user;
-    // console.log("userId:", userId);
 
-    const { status, priority, search = "", page: pageQuery } = req.query;
+    const { status, priority, search = "" } = req.query;
+    const { page, limit, skip } = getPagination(req.query, 6);
 
     const staff = await staffServices.getdatabyfindOne({
-      userId: new mongoose.Types.ObjectId(userId),
+      userId: toObjectId(userId),
     });
 
-    const page = Math.max(Number(pageQuery) || 1, 1);
-
-    const limit = 6;
-    const skip = (page - 1) * limit;
-
     const match = {
-      assignedStaffId: new mongoose.Types.ObjectId(staff._id),
+      assignedStaffIds: toObjectId(staff._id),
+      isDeleted: false,
       status: {
         $in: ["assigned", "in_progress", "completed"],
       },
@@ -617,6 +714,14 @@ export const getAllReqofStaff = async (req, res) => {
       match.priority = priority;
     }
 
+    const searchStage = buildRegexSearch(search, [
+      "title",
+      "description",
+      "category.name",
+      "user.firstname",
+      "user.lastname",
+    ]);
+
     const pipeline = [
       {
         $match: match,
@@ -627,6 +732,16 @@ export const getAllReqofStaff = async (req, res) => {
           from: "users",
           localField: "userId",
           foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                firstname: 1,
+                lastname: 1,
+                profilePic: 1,
+              },
+            },
+          ],
           as: "user",
         },
       },
@@ -640,6 +755,14 @@ export const getAllReqofStaff = async (req, res) => {
           from: "categories",
           localField: "categoryId",
           foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                name: 1,
+              },
+            },
+          ],
           as: "category",
         },
       },
@@ -648,43 +771,10 @@ export const getAllReqofStaff = async (req, res) => {
         $unwind: "$category",
       },
 
-      ...(search
+      ...(searchStage
         ? [
             {
-              $match: {
-                $or: [
-                  {
-                    title: {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-                  {
-                    description: {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-                  {
-                    "category.name": {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-                  {
-                    "user.firstname": {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-                  {
-                    "user.lastname": {
-                      $regex: search,
-                      $options: "i",
-                    },
-                  },
-                ],
-              },
+              $match: searchStage,
             },
           ]
         : []),
@@ -704,6 +794,32 @@ export const getAllReqofStaff = async (req, res) => {
             {
               $limit: limit,
             },
+            {
+              $project: {
+                _id: 1,
+                title: 1,
+                description: 1,
+                priority: 1,
+                status: 1,
+                // assignedAt: 1,
+                // startedAt: 1,
+                // completedAt: 1,
+                // createdAt: 1,
+                // updatedAt: 1,
+
+                user: {
+                  _id: "$user._id",
+                  firstname: "$user.firstname",
+                  lastname: "$user.lastname",
+                  profilePic: "$user.profilePic",
+                },
+
+                category: {
+                  _id: "$category._id",
+                  name: "$category.name",
+                },
+              },
+            },
           ],
 
           total: [
@@ -717,15 +833,12 @@ export const getAllReqofStaff = async (req, res) => {
 
     const result = await ServiceRequestServices.getAggData(pipeline);
 
-  
     const requests = result[0]?.data || [];
-
     const totalRequest = result[0]?.total[0]?.count || 0;
 
     return successResponse(res, {
       statusCode: 200,
       message: "Assigned requests fetched successfully.",
-
       data: {
         requests,
         page,
@@ -735,7 +848,7 @@ export const getAllReqofStaff = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("error:", error);
+    console.log("getAllReqofStaff error:", error);
 
     return errorResponse(res, {
       statusCode: 500,
@@ -754,11 +867,113 @@ export const getAssignedRequestById = async (req, res) => {
       userId,
     });
 
+    // const pipeline = [
+    //   {
+    //     $match: {
+    //       _id: toObjectId(reqid),
+    //       assignedStaffIds: toObjectId(staff._id),
+    //     },
+    //   },
+
+    //   {
+    //     $lookup: {
+    //       from: "users",
+    //       localField: "userId",
+    //       foreignField: "_id",
+    //       pipeline: [
+    //         {
+    //           $project: {
+    //             _id: 1,
+    //             firstname: 1,
+    //             lastname: 1,
+    //             profilePic: 1,
+    //           },
+    //         },
+    //       ],
+    //       as: "user",
+    //     },
+    //   },
+
+    //   {
+    //     $unwind: {
+    //       path: "$user",
+    //       preserveNullAndEmptyArrays: true,
+    //     },
+    //   },
+
+    //   {
+    //     $lookup: {
+    //       from: "categories",
+    //       localField: "categoryId",
+    //       foreignField: "_id",
+    //       pipeline: [
+    //         {
+    //           $project: {
+    //             _id: 1,
+    //             name: 1,
+    //             description: 1,
+    //             isActive: 1,
+    //           },
+    //         },
+    //       ],
+    //       as: "category",
+    //     },
+    //   },
+
+    //   {
+    //     $unwind: {
+    //       path: "$category",
+    //       preserveNullAndEmptyArrays: true,
+    //     },
+    //   },
+
+    //   {
+    //     $lookup: {
+    //       from: "attachments",
+    //       localField: "attachments",
+    //       foreignField: "_id",
+    //       pipeline: [
+    //         {
+    //           $project: {
+    //             _id: 1,
+    //             originalName: 1,
+    //             fileName: 1,
+    //             filePath: 1,
+    //             mimeType: 1,
+    //             size: 1,
+    //             createdAt: 1,
+    //             updatedAt: 1,
+    //           },
+    //         },
+    //       ],
+    //       as: "attachments",
+    //     },
+    //   },
+
+    //   {
+    //     $project: {
+    //       _id: 1,
+    //       title: 1,
+    //       description: 1,
+    //       priority: 1,
+    //       status: 1,
+    //       createdAt: 1,
+    //       updatedAt: 1,
+    //       assignedAt: 1,
+    //       startedAt: 1,
+    //       completedAt: 1,
+    //       user: 1,
+    //       category: 1,
+    //       attachments: 1,
+    //     },
+    //   },
+    // ];
+
     const pipeline = [
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(reqid),
-          assignedStaffId: new mongoose.Types.ObjectId(staff._id),
+          _id: toObjectId(reqid),
+          assignedStaffIds: toObjectId(staff._id),
         },
       },
 
@@ -799,6 +1014,7 @@ export const getAssignedRequestById = async (req, res) => {
                 _id: 1,
                 name: 1,
                 description: 1,
+                isActive: 1,
               },
             },
           ],
@@ -813,11 +1029,12 @@ export const getAssignedRequestById = async (req, res) => {
         },
       },
 
+     
       {
         $lookup: {
           from: "attachments",
-          localField: "attachments",
-          foreignField: "_id",
+          localField: "_id",
+          foreignField: "requestId",
           pipeline: [
             {
               $project: {
@@ -836,127 +1053,31 @@ export const getAssignedRequestById = async (req, res) => {
         },
       },
 
-      // {
-      //   $lookup: {
-      //     from: "comments",
-      //     let: {
-      //       requestId: "$_id",
-      //     },
-      //     pipeline: [
-      //       {
-      //         $match: {
-      //           $expr: {
-      //             $eq: ["$requestId", "$$requestId"],
-      //           },
-      //         },
-      //       },
-
-      //       {
-      //         $sort: {
-      //           createdAt: 1,
-      //         },
-      //       },
-
-      //       {
-      //         $lookup: {
-      //           from: "users",
-      //           localField: "userId",
-      //           foreignField: "_id",
-      //           pipeline: [
-      //             {
-      //               $project: {
-      //                 _id: 1,
-      //                 firstname: 1,
-      //                 lastname: 1,
-      //                 role: 1,
-      //                 profilePic: 1,
-      //               },
-      //             },
-      //           ],
-      //           as: "commentUser",
-      //         },
-      //       },
-
-      //       {
-      //         $unwind: {
-      //           path: "$commentUser",
-      //           preserveNullAndEmptyArrays: true,
-      //         },
-      //       },
-
-      //       {
-      //         $lookup: {
-      //           from: "attachments",
-      //           localField: "attachments",
-      //           foreignField: "_id",
-      //           pipeline: [
-      //             {
-      //               $project: {
-      //                 _id: 1,
-      //                 originalName: 1,
-      //                 fileName: 1,
-      //                 filePath: 1,
-      //                 mimeType: 1,
-      //                 size: 1,
-      //                 createdAt: 1,
-      //                 updatedAt: 1,
-      //               },
-      //             },
-      //           ],
-      //           as: "attachments",
-      //         },
-      //       },
-
-      //       {
-      //         $project: {
-      //           _id: 1,
-      //           message: 1,
-      //           createdAt: 1,
-      //           updatedAt: 1,
-      //           commentUser: 1,
-      //           attachments: 1,
-      //         },
-      //       },
-      //     ],
-      //     as: "comments",
-      //   },
-      // },
-
       {
         $project: {
           _id: 1,
-
           title: 1,
           description: 1,
-
           priority: 1,
           status: 1,
-
           createdAt: 1,
           updatedAt: 1,
-
           assignedAt: 1,
           startedAt: 1,
           completedAt: 1,
-
           user: 1,
           category: 1,
-
           attachments: 1,
-          comments: 1,
         },
       },
     ];
-
     const result = await ServiceRequestServices.getAggData(pipeline);
 
-  
     return successResponse(res, {
       statusCode: 200,
       message: "Service request fetched successfully.",
       data: result[0],
     });
-    
   } catch (error) {
     console.log("getAssignedRequestById error:", error);
 
@@ -979,28 +1100,52 @@ export const acceptAssignedRequest = async (req, res) => {
 
     const serviceRequest = await ServiceRequestServices.getdatabyfindOne({
       _id: reqid,
-      assignedStaffId: staff._id,
+      isDeleted: false,
     });
 
-    const admin = await userServices.getdatabyfindOne({ role: "admin" });
-
     const oldStatus = serviceRequest.status;
+    const isFirstAcceptance = oldStatus === "assigned";
+
+    const updateData = {
+      $addToSet: {
+        acceptedStaffIds: staff._id,
+      },
+    };
+
+    if (isFirstAcceptance) {
+      updateData.$set = {
+        status: "in_progress",
+        startedAt: new Date(),
+      };
+    }
 
     await ServiceRequestServices.updateOne(
       {
         _id: reqid,
-        assignedStaffId: staff._id,
-        status: "assigned",
-      },
-      {
-        $set: {
-          status: "in_progress",
-          startedAt: new Date(),
+        isDeleted: false,
+        assignedStaffIds: staff._id,
+        acceptedStaffIds: {
+          $ne: staff._id,
+        },
+        status: {
+          $in: ["assigned", "in_progress"],
         },
       },
+      updateData,
     );
 
-    
+    const user = await userServices.getdatabyfindOne({
+      _id: userId,
+      role: "staff",
+      isDeleted: false,
+    });
+
+    const admin = await userServices.getdatabyfindOne({
+      role: "admin",
+      isDeleted: false,
+    });
+
+    const staffName = `${user.firstname} ${user.lastname}`.trim();
 
     await auditLogServices.create({
       userId,
@@ -1011,55 +1156,56 @@ export const acceptAssignedRequest = async (req, res) => {
         status: oldStatus,
       },
       newValue: {
-        status: "in_progress",
+        status: isFirstAcceptance ? "in_progress" : oldStatus,
+        acceptedBy: staff._id,
       },
       ipAddress: req.ip,
       userAgent: req.get("user-agent"),
     });
 
-    const usernotification = await notificationServices.createNotification({
+    await sendNotification({
       receiverId: serviceRequest.userId,
       senderId: userId,
       requestId: serviceRequest._id,
       type: "status_changed",
-      message: `Your service request "${serviceRequest.title}" status has been changed to "In Progress".`,
-    });
-
-    const io = getIo();
-
-    io.to(`user:${serviceRequest.userId}`).emit(
-      "service-request:status-updated",
-      {
-        requestId: serviceRequest._id,
+      room: `user:${serviceRequest.userId}`,
+      event: "service-request:status-updated",
+      data: {
         status: "in_progress",
-        usernotification,
+        staffName,
+        staffId: staff._id,
       },
-    );
-
-    const adminNotification = await notificationServices.createNotification({
-      receiverId: admin._id,
-      senderId: userId,
-      requestId: serviceRequest._id,
-      type: "status_changed",
-      message: `Staff accepted service request "${serviceRequest.title}".`,
     });
 
-    io.to("admins").emit("service-request:status-updated", {
-      requestId: serviceRequest._id,
-      status: "in_progress",
-      notification: adminNotification,
-    });
+    if (admin) {
+      await sendNotification({
+        receiverId: admin._id,
+        senderId: userId,
+        requestId: serviceRequest._id,
+        type: "status_changed",
+        room: "admins",
+        event: "service-request:status-updated",
+        data: {
+          status: "in_progress",
+          staffName,
+          staffId: staff._id,
+        },
+      });
+    }
+
     await redisServices.delete(redisKeys.dashboard.stats());
+
     return successResponse(res, {
       statusCode: 200,
       message: "Service request accepted successfully.",
       data: {
         requestId: serviceRequest._id,
         status: "in_progress",
+        staffId: staff._id,
       },
     });
   } catch (error) {
-    console.log("acceptAssignedRequest error:", error);
+    console.log("Accept service request error:", error);
 
     return errorResponse(res, {
       statusCode: 500,
@@ -1081,7 +1227,7 @@ export const getRequestHistory = async (req, res) => {
       {
         $match: {
           entity: "ServiceRequest",
-          entityId: new mongoose.Types.ObjectId(reqid),
+          entityId: toObjectId(reqid),
         },
       },
 
@@ -1096,22 +1242,10 @@ export const getRequestHistory = async (req, res) => {
           staffIds: {
             $setUnion: [
               {
-                $cond: [
-                  {
-                    $ne: ["$oldValue.assignedStaffId", null],
-                  },
-                  ["$oldValue.assignedStaffId"],
-                  [],
-                ],
+                $ifNull: ["$oldValue.assignedStaffIds", []],
               },
               {
-                $cond: [
-                  {
-                    $ne: ["$newValue.assignedStaffId", null],
-                  },
-                  ["$newValue.assignedStaffId"],
-                  [],
-                ],
+                $ifNull: ["$newValue.assignedStaffIds", []],
               },
             ],
           },
@@ -1148,7 +1282,6 @@ export const getRequestHistory = async (req, res) => {
                 },
               },
             },
-
             {
               $lookup: {
                 from: "users",
@@ -1157,14 +1290,12 @@ export const getRequestHistory = async (req, res) => {
                 as: "staffUser",
               },
             },
-
             {
               $unwind: {
                 path: "$staffUser",
                 preserveNullAndEmptyArrays: true,
               },
             },
-
             {
               $project: {
                 _id: 1,
@@ -1183,46 +1314,32 @@ export const getRequestHistory = async (req, res) => {
       {
         $set: {
           "oldValue.assignedStaff": {
-            $let: {
-              vars: {
-                oldStaff: {
-                  $arrayElemAt: [
-                    {
-                      $filter: {
-                        input: "$staffDetails",
-                        as: "staff",
-                        cond: {
-                          $eq: ["$$staff._id", "$oldValue.assignedStaffId"],
-                        },
-                      },
-                    },
-                    0,
-                  ],
-                },
+            $filter: {
+              input: "$staffDetails",
+              as: "staff",
+              cond: {
+                $in: [
+                  "$$staff._id",
+                  {
+                    $ifNull: ["$oldValue.assignedStaffIds", []],
+                  },
+                ],
               },
-              in: "$$oldStaff",
             },
           },
 
           "newValue.assignedStaff": {
-            $let: {
-              vars: {
-                newStaff: {
-                  $arrayElemAt: [
-                    {
-                      $filter: {
-                        input: "$staffDetails",
-                        as: "staff",
-                        cond: {
-                          $eq: ["$$staff._id", "$newValue.assignedStaffId"],
-                        },
-                      },
-                    },
-                    0,
-                  ],
-                },
+            $filter: {
+              input: "$staffDetails",
+              as: "staff",
+              cond: {
+                $in: [
+                  "$$staff._id",
+                  {
+                    $ifNull: ["$newValue.assignedStaffIds", []],
+                  },
+                ],
               },
-              in: "$$newStaff",
             },
           },
         },
@@ -1234,8 +1351,6 @@ export const getRequestHistory = async (req, res) => {
           action: 1,
           entity: 1,
           entityId: 1,
-          oldValue: 1,
-          newValue: 1,
           createdAt: 1,
 
           userId: {
@@ -1243,6 +1358,30 @@ export const getRequestHistory = async (req, res) => {
             firstname: "$actionUser.firstname",
             lastname: "$actionUser.lastname",
             role: "$actionUser.role",
+          },
+
+          oldValue: {
+            status: "$oldValue.status",
+            assignedStaffIds: {
+              $ifNull: ["$oldValue.assignedStaffIds", []],
+            },
+            assignedStaff: "$oldValue.assignedStaff",
+          },
+
+          newValue: {
+            userId: "$newValue.userId",
+            categoryId: "$newValue.categoryId",
+            title: "$newValue.title",
+            description: "$newValue.description",
+            priority: "$newValue.priority",
+            attachments: {
+              $ifNull: ["$newValue.attachments", []],
+            },
+            status: "$newValue.status",
+            assignedStaffIds: {
+              $ifNull: ["$newValue.assignedStaffIds", []],
+            },
+            assignedStaff: "$newValue.assignedStaff",
           },
         },
       },
@@ -1259,12 +1398,11 @@ export const getRequestHistory = async (req, res) => {
           createdAt: serviceRequest.createdAt,
           completedAt: serviceRequest.completedAt || null,
         },
-
         history,
       },
     });
   } catch (error) {
-    console.log(" error:", error);
+    console.log("getRequestHistory error:", error);
 
     return errorResponse(res, {
       statusCode: 500,

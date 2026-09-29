@@ -26,7 +26,7 @@ export default function RequestDetailsPage() {
         setLoading(true);
 
         const response = await getMyRequestById(requestId);
-
+        
         setRequest(response.serviceRequest);
       } catch (error) {
         console.error("Failed to fetch request:", error);

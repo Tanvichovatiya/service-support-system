@@ -149,17 +149,9 @@ const CreateRequestForm = () => {
 
     if (!formData.title.trim()) {
       newErrors.title = "Title is required";
-    } else if (formData.title.trim().length < 5) {
-      newErrors.title =
-        "Title must be at least 5 characters";
-    }
+    } 
 
-    if (!formData.description.trim()) {
-      newErrors.description = "Description is required";
-    } else if (formData.description.trim().length < 10) {
-      newErrors.description =
-        "Description must be at least 10 characters";
-    }
+ 
 
     setErrors(newErrors);
 
@@ -333,7 +325,7 @@ const CreateRequestForm = () => {
             value={formData.description}
             onChange={handleChange}
             rows={7}
-            required
+           
             error={errors.description}
             disabled={loading}
           />

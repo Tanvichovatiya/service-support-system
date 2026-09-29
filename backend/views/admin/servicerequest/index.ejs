@@ -281,9 +281,12 @@
                                         </th>
 
                                         <th
-                                            class="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text"
+                                            class="px-8 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text"
                                         >
                                             Assigned Staff
+                                        </th>
+                                        <th class="px-8 py-4 text-left text-xs font-semibold uppercase tracking-wide text-table-header-text">
+                                            Accepted Staff
                                         </th>
 
                                         <th
@@ -334,7 +337,7 @@
                                     <tr
                                         class="bg-table-row transition hover:bg-table-row-hover"
                                     >
-                                        <!-- Request -->
+                                        
                                         <td class="px-5 py-4">
                                             <div
                                                 class="flex items-start gap-3"
@@ -606,57 +609,121 @@
                                             <% } %>
                                         </td>
 
-                                        <!-- Assigned Staff -->
-                                        <td class="px-5 py-4">
-                                            <% if (request.assignedStaff) { %>
+                                     
+<td class="px-8 py-4">
+    <% if (request.assignedStaff && request.assignedStaff.length > 0) { %>
 
-                                            <div
-                                                class="flex items-center gap-3"
-                                            >
-                                                <div
-                                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-info-light text-info"
-                                                >
-                                                    <i
-                                                        class="fa-solid fa-user-tie text-sm"
-                                                    ></i>
-                                                </div>
+        <div class="flex flex-col gap-2">
+            <% request.assignedStaff.forEach((staff) => { %>
 
-                                                <div class="min-w-0">
-                                                    <p
-                                                        class="font-medium text-text-primary"
-                                                    >
-                                                        <%=
-                                                        request.assignedStaff.user?.firstname
-                                                        || "" %> <%=
-                                                        request.assignedStaff.user?.lastname
-                                                        || "" %>
-                                                    </p>
+                <div class="flex items-center gap-3">
+                    <!-- Staff Avatar -->
+                    <% if (staff.user?.profilePic) { %>
 
-                                                    <p
-                                                        class="text-xs text-text-muted"
-                                                    >
-                                                        <%=
-                                                        request.assignedStaff.employeeId
-                                                        || "-" %>
-                                                    </p>
-                                                </div>
-                                            </div>
+                        <img
+                            src="<%= staff.user.profilePic %>"
+                            alt="<%= staff.user?.firstname || 'Staff' %>"
+                            class="h-9 w-9 shrink-0 rounded-full object-cover"
+                        />
 
-                                            <% } else { %>
+                    <% } else { %>
 
-                                            <span
-                                                class="inline-flex items-center gap-1.5 rounded-full bg-warning-light px-3 py-1 text-xs font-semibold text-warning-dark"
-                                            >
-                                                <i
-                                                    class="fa-solid fa-user-slash"
-                                                ></i>
-                                                Not Assigned
-                                            </span>
+                        <div
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-info-light text-sm font-semibold text-info"
+                        >
+                            <%= (
+                                staff.user?.firstname ||
+                                staff.employeeId ||
+                                "S"
+                            ).charAt(0).toUpperCase() %>
+                        </div>
 
-                                            <% } %>
-                                        </td>
+                    <% } %>
 
-                                        <!-- Comments -->
+                    <!-- Staff Details -->
+                    <div class="min-w-0">
+                        <p class="font-medium text-text-primary">
+                            <%= staff.user?.firstname || "" %>
+                            <%= staff.user?.lastname || "" %>
+                        </p>
+
+                        <p class="text-xs text-text-muted">
+                            <%= staff.employeeId || "-" %>
+                        </p>
+                    </div>
+                </div>
+
+            <% }); %>
+        </div>
+
+    <% } else { %>
+
+        <span
+            class="inline-flex items-center gap-1.5 rounded-full bg-warning-light px-3 py-1 text-xs font-semibold text-warning-dark"
+        >
+            <i class="fa-solid fa-user-slash"></i>
+            Not Assigned
+        </span>
+
+    <% } %>
+</td>
+
+                            
+<td class="px-8 py-4">
+    <% if (request.acceptedStaff && request.acceptedStaff.length > 0) { %>
+
+        <div class="flex flex-col gap-2">
+            <% request.acceptedStaff.forEach((staff) => { %>
+
+                <div class="flex items-center gap-3">
+                    <% if (staff.user?.profilePic) { %>
+
+                        <img
+                            src="<%= staff.user.profilePic %>"
+                            alt="<%= staff.user?.firstname || 'Staff' %>"
+                            class="h-9 w-9 shrink-0 rounded-full object-cover"
+                        />
+
+                    <% } else { %>
+
+                        <div
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success-light text-sm font-semibold text-success-dark"
+                        >
+                            <%= (
+                                staff.user?.firstname ||
+                                staff.employeeId ||
+                                "S"
+                            ).charAt(0).toUpperCase() %>
+                        </div>
+
+                    <% } %>
+
+                    <div class="min-w-0">
+                        <p class="font-medium text-text-primary">
+                            <%= staff.user?.firstname || "" %>
+                            <%= staff.user?.lastname || "" %>
+                        </p>
+
+                        <p class="text-xs text-text-muted">
+                            <%= staff.employeeId || "-" %>
+                        </p>
+                    </div>
+                </div>
+
+            <% }); %>
+        </div>
+
+    <% } else { %>
+
+      <span
+        class="inline-flex items-center gap-1.5 rounded-full bg-warning-light px-3 py-1 text-xs font-semibold text-warning-dark"
+    >
+        <i class="fa-solid fa-clock"></i>
+        Not Accepted
+    </span>
+
+    <% } %>
+</td>       
                                         <td
                                             class="px-5 py-4 text-center"
                                         >
@@ -773,7 +840,7 @@
         <%- include("viewComment") %>
         <%- include("createRequest") %>
         <%- include("reassignStaff") %>
-
+<!-- 
            <script>
   async function exportReport() {
     const btn = document.getElementById("exportBtn");
@@ -812,7 +879,7 @@
       text.textContent = "Export Report";
     }
   }
-</script>
+</script> -->
 
         <script src="/js/serviceReq.js"></script>
         <script src="/js/updateReqStatus.js"></script>

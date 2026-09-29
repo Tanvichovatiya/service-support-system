@@ -8,13 +8,8 @@ import { uploadMessageFile } from "../../middleware/uploadMiddleware.js"
 
 const msgRoutes = Router()
 
-msgRoutes.post(
-  "/sendmsg/:receiverId",
-  authMiddleware,
-  authorize("user", "staff"),
-  uploadMessageFile.single("file"),
-  sendMessage
-);
+msgRoutes.post("/sendmsg/:receiverId", authMiddleware,authorize("user", "staff"), uploadMessageFile.single("file"),sendMessage);
+
 msgRoutes.get("/conversation/:receiverId",authMiddleware,authorize("user","staff"),loadMessage)
 
 msgRoutes.get("/getunreadmsg",authMiddleware,authorize("user","staff"),getUnReadMsg)

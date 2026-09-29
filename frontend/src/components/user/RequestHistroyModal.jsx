@@ -28,13 +28,14 @@ const HISTORY_ICONS = {
   x: FiX,
 };
 
-
 const StaffCard = ({ staff, type = "new" }) => {
+  const isOld = type === "old";
+   
   if (!staff) {
     return (
       <div className="flex-1 rounded-lg bg-background-soft px-3 py-2.5">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-          {type === "old" ? "Previous Staff" : "New Staff"}
+          {isOld ? "Previous Staff" : "New Staff"}
         </p>
 
         <p className="mt-1 text-xs font-medium text-text-muted">
@@ -43,8 +44,6 @@ const StaffCard = ({ staff, type = "new" }) => {
       </div>
     );
   }
-
-  const isOld = type === "old";
 
   const staffName =
     [staff.firstname, staff.lastname]
@@ -60,7 +59,6 @@ const StaffCard = ({ staff, type = "new" }) => {
           : "bg-success-light"
       }`}
     >
-   
       <p
         className={`text-[10px] font-semibold uppercase tracking-wide ${
           isOld
@@ -70,8 +68,6 @@ const StaffCard = ({ staff, type = "new" }) => {
       >
         {isOld ? "Previous Staff" : "New Staff"}
       </p>
-
-      {/* STAFF */}
 
       <div className="mt-1 flex items-center gap-2">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface text-brand">
@@ -83,13 +79,33 @@ const StaffCard = ({ staff, type = "new" }) => {
             {staffName}
           </p>
 
-          {staff.email && (
+          {/* {staff.email && (
             <p className="truncate text-[10px] text-text-muted">
               {staff.email}
             </p>
-          )}
+          )} */}
         </div>
       </div>
+    </div>
+  );
+};
+
+const StaffList = ({ staff = [], type = "new" }) => {
+  const staffList = Array.isArray(staff) ? staff : [];
+
+  if (staffList.length === 0) {
+    return <StaffCard type={type} />;
+  }
+
+  return (
+    <div className="flex-1 space-y-2">
+      {staffList.map((member) => (
+        <StaffCard
+          key={member._id}
+          staff={member}
+          type={type}
+        />
+      ))}
     </div>
   );
 };
@@ -101,22 +117,26 @@ const AssignmentDetails = ({ assignment }) => {
     return null;
   }
 
+  const {
+    oldStaff = [],
+    newStaff = [],
+    isReassigned,
+  } = assignment;
 
-  if (!assignment.isReassigned) {
+  if (!isReassigned) {
     return (
       <div className="mt-3 rounded-lg border border-border-light bg-surface-soft px-3 py-3">
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
           Assigned To
         </p>
 
-        <StaffCard
-          staff={assignment.newStaff}
+        <StaffList
+          staff={newStaff}
           type="new"
         />
       </div>
     );
   }
-
 
   return (
     <div className="mt-3 rounded-lg border border-border-light bg-surface px-3 py-3">
@@ -124,22 +144,18 @@ const AssignmentDetails = ({ assignment }) => {
         Staff Reassignment
       </p>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-      
-        <StaffCard
-          staff={assignment.oldStaff}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+        <StaffList
+          staff={oldStaff}
           type="old"
         />
 
-     
-
-        <div className="flex justify-center px-1 text-text-muted">
+        <div className="flex justify-center px-1 pt-3 text-text-muted sm:pt-4">
           <FiArrowRight size={16} />
         </div>
 
-
-        <StaffCard
-          staff={assignment.newStaff}
+        <StaffList
+          staff={newStaff}
           type="new"
         />
       </div>

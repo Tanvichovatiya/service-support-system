@@ -1,4 +1,3 @@
-
 import redisServices from "../../services/redis/redisServices.js";
 import ServiceRequestServices from "../../services/ServiceRequestServices.js";
 import { userServices } from "../../services/userServices.js";
@@ -9,11 +8,9 @@ export const getDashboard = async (req, res) => {
   try {
     const cacheKey = redisKeys.dashboard.stats();
 
-
     const cachedDashboard = await redisServices.getJson(cacheKey);
 
-    if (cachedDashboard &&cachedDashboard.dashboard &&cachedDashboard.totalUsers !== undefined
-    ) {
+    if (cachedDashboard &&cachedDashboard.dashboard &&cachedDashboard.totalUsers !== undefined) {
       console.log("Dashboard Cache HIT");
 
       return res.render("admin/dashboard", {
@@ -25,9 +22,15 @@ export const getDashboard = async (req, res) => {
     console.log("Dashboard Cache MISS");
 
     const [totalUsers, result] = await Promise.all([
-      userServices.countData(),
+      userServices.countData({ isDeleted: false , role:"user" }),
 
       ServiceRequestServices.getAggData([
+        {
+          $match: {
+            isDeleted: false,
+          },
+        },
+
         {
           $facet: {
             summary: [
@@ -49,6 +52,7 @@ export const getDashboard = async (req, res) => {
                               $dateTrunc: {
                                 date: "$$NOW",
                                 unit: "day",
+                                timezone: "Asia/Kolkata",
                               },
                             },
                           ],
@@ -61,49 +65,25 @@ export const getDashboard = async (req, res) => {
 
                   pending: {
                     $sum: {
-                      $cond: [
-                        {
-                          $eq: ["$status", "pending"],
-                        },
-                        1,
-                        0,
-                      ],
+                      $cond: [{ $eq: ["$status", "pending"] }, 1, 0],
                     },
                   },
 
                   assigned: {
                     $sum: {
-                      $cond: [
-                        {
-                          $eq: ["$status", "assigned"],
-                        },
-                        1,
-                        0,
-                      ],
+                      $cond: [{ $eq: ["$status", "assigned"] }, 1, 0],
                     },
                   },
 
                   inProgress: {
                     $sum: {
-                      $cond: [
-                        {
-                          $eq: ["$status", "in_progress"],
-                        },
-                        1,
-                        0,
-                      ],
+                      $cond: [{ $eq: ["$status", "in_progress"] }, 1, 0],
                     },
                   },
 
                   completed: {
                     $sum: {
-                      $cond: [
-                        {
-                          $eq: ["$status", "completed"],
-                        },
-                        1,
-                        0,
-                      ],
+                      $cond: [{ $eq: ["$status", "completed"] }, 1, 0],
                     },
                   },
                 },
@@ -190,10 +170,16 @@ export const getDashboard = async (req, res) => {
                 $group: {
                   _id: {
                     year: {
-                      $year: "$createdAt",
+                      $year: {
+                        date: "$createdAt",
+                        timezone: "Asia/Kolkata",
+                      },
                     },
                     month: {
-                      $month: "$createdAt",
+                      $month: {
+                        date: "$createdAt",
+                        timezone: "Asia/Kolkata",
+                      },
                     },
                   },
 
@@ -203,25 +189,13 @@ export const getDashboard = async (req, res) => {
 
                   completedRequests: {
                     $sum: {
-                      $cond: [
-                        {
-                          $eq: ["$status", "completed"],
-                        },
-                        1,
-                        0,
-                      ],
+                      $cond: [{ $eq: ["$status", "completed"] }, 1, 0],
                     },
                   },
 
                   pendingRequests: {
                     $sum: {
-                      $cond: [
-                        {
-                          $eq: ["$status", "pending"],
-                        },
-                        1,
-                        0,
-                      ],
+                      $cond: [{ $eq: ["$status", "pending"] }, 1, 0],
                     },
                   },
                 },
@@ -230,10 +204,8 @@ export const getDashboard = async (req, res) => {
               {
                 $project: {
                   _id: 0,
-
                   year: "$_id.year",
                   month: "$_id.month",
-
                   totalRequests: 1,
                   completedRequests: 1,
                   pendingRequests: 1,
@@ -293,15 +265,20 @@ export const getDashboard = async (req, res) => {
             staffPerformance: [
               {
                 $match: {
-                  assignedStaffId: {
-                    $ne: null,
+                  assignedStaffIds: {
+                    $exists: true,
+                    $ne: [],
                   },
                 },
               },
 
               {
+                $unwind: "$assignedStaffIds",
+              },
+
+              {
                 $group: {
-                  _id: "$assignedStaffId",
+                  _id: "$assignedStaffIds",
 
                   assignedRequests: {
                     $sum: 1,
@@ -309,13 +286,7 @@ export const getDashboard = async (req, res) => {
 
                   completedRequests: {
                     $sum: {
-                      $cond: [
-                        {
-                          $eq: ["$status", "completed"],
-                        },
-                        1,
-                        0,
-                      ],
+                      $cond: [{ $eq: ["$status", "completed"] }, 1, 0],
                     },
                   },
                 },
@@ -354,6 +325,13 @@ export const getDashboard = async (req, res) => {
               },
 
               {
+                $match: {
+                  "user.role": "staff",
+                  "user.isDeleted": false,
+                },
+              },
+
+              {
                 $project: {
                   _id: 0,
 
@@ -363,6 +341,9 @@ export const getDashboard = async (req, res) => {
                     $concat: ["$user.firstname", " ", "$user.lastname"],
                   },
 
+                  employeeId: "$staff.employeeId",
+                  department: "$staff.department",
+
                   assignedRequests: 1,
                   completedRequests: 1,
                 },
@@ -371,16 +352,18 @@ export const getDashboard = async (req, res) => {
               {
                 $sort: {
                   completedRequests: -1,
+                  assignedRequests: -1,
                 },
               },
             ],
 
             averageCompletionTime: [
-
               {
                 $match: {
                   status: "completed",
-
+                  completedAt: {
+                    $ne: null,
+                  },
                 },
               },
 
@@ -438,9 +421,6 @@ export const getDashboard = async (req, res) => {
       averageCompletionTime,
     };
 
-
-
-    // console.log("dashboard:",dashboard)
     await redisServices.setJson(
       cacheKey,
       {

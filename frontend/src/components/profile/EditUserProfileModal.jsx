@@ -3,11 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  FaTimes,
-  FaUser,
-  FaVenusMars,
-} from "react-icons/fa";
+import { FaTimes, FaUser } from "react-icons/fa";
 
 import { InputField } from "@/components/ui/InputField";
 import FileInput from "@/components/ui/FileInput";
@@ -25,10 +21,7 @@ import {
 const EditUserProfileModal = () => {
   const dispatch = useDispatch();
 
-  const {
-    profile,
-    updateLoading,
-  } = useSelector((state) => state.profile);
+  const { profile, updateLoading } = useSelector((state) => state.profile);
 
   const [formData, setFormData] = useState({
     firstname: "",
@@ -37,14 +30,7 @@ const EditUserProfileModal = () => {
   });
 
   const [profileFile, setProfileFile] = useState(null);
-
   const [errors, setErrors] = useState({});
-
-  /*
-  |--------------------------------------------------------------------------
-  | Set existing profile data
-  |--------------------------------------------------------------------------
-  */
 
   useEffect(() => {
     if (!profile) return;
@@ -55,12 +41,6 @@ const EditUserProfileModal = () => {
       gender: profile.gender || "",
     });
   }, [profile]);
-
-  /*
-  |--------------------------------------------------------------------------
-  | Input Change
-  |--------------------------------------------------------------------------
-  */
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -76,27 +56,19 @@ const EditUserProfileModal = () => {
     }));
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | Validation
-  |--------------------------------------------------------------------------
-  */
-
   const validate = () => {
     const newErrors = {};
 
     if (!formData.firstname.trim()) {
       newErrors.firstname = "First name is required";
     } else if (formData.firstname.trim().length < 2) {
-      newErrors.firstname =
-        "First name must be at least 2 characters";
+      newErrors.firstname = "First name must be at least 2 characters";
     }
 
     if (!formData.lastname.trim()) {
       newErrors.lastname = "Last name is required";
     } else if (formData.lastname.trim().length < 2) {
-      newErrors.lastname =
-        "Last name must be at least 2 characters";
+      newErrors.lastname = "Last name must be at least 2 characters";
     }
 
     if (!formData.gender) {
@@ -108,12 +80,6 @@ const EditUserProfileModal = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | Submit
-  |--------------------------------------------------------------------------
-  */
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -124,20 +90,9 @@ const EditUserProfileModal = () => {
 
       const data = new FormData();
 
-      data.append(
-        "firstname",
-        formData.firstname.trim()
-      );
-
-      data.append(
-        "lastname",
-        formData.lastname.trim()
-      );
-
-      data.append(
-        "gender",
-        formData.gender
-      );
+      data.append("firstname", formData.firstname.trim());
+      data.append("lastname", formData.lastname.trim());
+      data.append("gender", formData.gender);
 
       if (profileFile) {
         data.append("profilePic", profileFile);
@@ -145,15 +100,11 @@ const EditUserProfileModal = () => {
 
       await editUserProfile(data);
 
-      /*
-       * Update Redux immediately.
-       */
       dispatch(
         updateProfile({
           firstname: formData.firstname.trim(),
           lastname: formData.lastname.trim(),
           gender: formData.gender,
-
           ...(profileFile && {
             profilePic: URL.createObjectURL(profileFile),
           }),
@@ -161,25 +112,16 @@ const EditUserProfileModal = () => {
       );
 
       dispatch(closeEditProfileModal());
-
     } catch (error) {
-      console.log("Update profile error:", error);
+      console.error("Update profile error:", error);
 
       setErrors({
-        submit:
-          error?.response?.data?.message ||
-          "Failed to update profile",
+        submit: error?.response?.data?.message || "Failed to update profile",
       });
     } finally {
       dispatch(setUpdateLoading(false));
     }
   };
-
-  /*
-  |--------------------------------------------------------------------------
-  | Close Modal
-  |--------------------------------------------------------------------------
-  */
 
   const handleClose = () => {
     if (updateLoading) return;
@@ -193,40 +135,13 @@ const EditUserProfileModal = () => {
   if (!profile) return null;
 
   return (
-    <div
-      className="
-        fixed
-        inset-0
-        z-50
-        flex
-        items-center
-        justify-center
-        bg-overlay
-        p-4
-      "
-      onMouseDown={handleClose}
-    >
-      <div
-        className="
-          w-full
-          max-w-xl
-          overflow-hidden
-          rounded-admin-xl
-          border
-          border-border
-          bg-modal-background
-          shadow-admin-lg
-        "
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-
-        {/* Header */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onMouseDown={handleClose}>
+      <div className="w-full max-w-xl overflow-hidden rounded-admin-xl border border-border bg-modal-background shadow-admin-lg" onMouseDown={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-border-light px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-text-primary">
               Edit Profile
             </h2>
-
             <p className="mt-0.5 text-xs text-text-secondary">
               Update your personal information
             </p>
@@ -236,36 +151,15 @@ const EditUserProfileModal = () => {
             type="button"
             onClick={handleClose}
             disabled={updateLoading}
-            className="
-              flex
-              h-9
-              w-9
-              items-center
-              justify-center
-              rounded-lg
-              text-text-muted
-              transition
-              hover:bg-surface-soft
-              hover:text-text-primary
-              disabled:cursor-not-allowed
-              disabled:opacity-50
-            "
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-soft hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             <FaTimes size={17} />
           </button>
         </div>
 
-        {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 p-6"
-        >
-
-          {/* Profile Image */}
+        <form onSubmit={handleSubmit} className="space-y-5 p-6">
           <div className="flex flex-col items-center">
-
             <div className="mb-4 h-24 w-24 overflow-hidden rounded-full border-4 border-brand-soft bg-surface-soft">
-
               {profileFile ? (
                 <img
                   src={URL.createObjectURL(profileFile)}
@@ -283,7 +177,6 @@ const EditUserProfileModal = () => {
                   <FaUser size={35} />
                 </div>
               )}
-
             </div>
 
             <div className="w-full">
@@ -298,9 +191,7 @@ const EditUserProfileModal = () => {
             </div>
           </div>
 
-          {/* Names */}
           <div className="grid gap-4 sm:grid-cols-2">
-
             <InputField
               label="First Name"
               id="firstname"
@@ -326,10 +217,8 @@ const EditUserProfileModal = () => {
               leftIcon={FaUser}
               disabled={updateLoading}
             />
-
           </div>
 
-          {/* Gender */}
           <Select
             label="Gender"
             id="gender"
@@ -340,34 +229,20 @@ const EditUserProfileModal = () => {
             error={errors.gender}
             disabled={updateLoading}
             options={[
-              {
-                value: "male",
-                label: "Male",
-              },
-              {
-                value: "female",
-                label: "Female",
-              },
-              {
-                value: "other",
-                label: "Other",
-              },
+              { value: "male", label: "Male" },
+              { value: "female", label: "Female" },
+              { value: "other", label: "Other" },
             ]}
             placeholder="Select gender"
           />
 
-          {/* Submit Error */}
           {errors.submit && (
             <div className="rounded-lg border border-danger/20 bg-danger-light px-4 py-3">
-              <p className="text-sm text-danger">
-                {errors.submit}
-              </p>
+              <p className="text-sm text-danger">{errors.submit}</p>
             </div>
           )}
 
-          {/* Buttons */}
           <div className="flex justify-end gap-3 border-t border-border-light pt-5">
-
             <Button
               type="button"
               variant="secondary"
@@ -385,7 +260,6 @@ const EditUserProfileModal = () => {
             >
               Save Changes
             </Button>
-
           </div>
         </form>
       </div>

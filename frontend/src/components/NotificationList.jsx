@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -42,10 +43,7 @@ const NotificationList = ({
       try {
         setLoading(true);
 
-        const data = await getUnReadnotification(
-          currentPage,
-          limit
-        );
+        const data = await getUnReadnotification(currentPage, limit);
 
         dispatch(
           setNotifications({
@@ -57,10 +55,7 @@ const NotificationList = ({
           })
         );
       } catch (error) {
-        console.error(
-          "Failed to fetch notifications:",
-          error
-        );
+        console.error("Failed to fetch notifications:", error);
       } finally {
         setLoading(false);
       }
@@ -81,15 +76,11 @@ const NotificationList = ({
       setMarkingAll(true);
 
       await markAllReadApi();
-
       dispatch(markAllNotificationsAsRead());
 
       await fetchNotifications(page);
     } catch (error) {
-      console.error(
-        "Failed to mark all notifications as read:",
-        error
-      );
+      console.error("Failed to mark all notifications as read:", error);
     } finally {
       setMarkingAll(false);
     }
@@ -102,7 +93,6 @@ const NotificationList = ({
   return (
     <section className="min-h-[calc(100vh-72px)] bg-background px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-5xl">
-       
         <div className="mb-6 flex flex-col gap-4 rounded-admin-lg border border-border bg-surface p-5 shadow-admin-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand">
@@ -110,57 +100,40 @@ const NotificationList = ({
             </div>
 
             <div>
-              <h1 className="text-xl font-bold text-text-primary">
-                {title}
-              </h1>
+              <h1 className="text-xl font-bold text-text-primary">{title}</h1>
 
-              <p className="mt-1 text-sm text-text-muted">
-                {description}
-              </p>
+              <p className="mt-1 text-sm text-text-muted">{description}</p>
 
               {unreadCount > 0 && (
                 <p className="mt-2 text-xs font-medium text-brand">
-                  {unreadCount} unread{" "}
-                  {unreadCount === 1
-                    ? "notification"
-                    : "notifications"}
+                  {unreadCount} unread {unreadCount === 1 ? "notification" : "notifications"}
                 </p>
               )}
             </div>
           </div>
 
-          
           {unreadCount > 0 && (
             <button
               type="button"
               onClick={handleMarkAllRead}
               disabled={markingAll}
-              className="inline-flex w-fit items-center gap-2 rounded-admin border border-brand bg-brand px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+              className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-admin border border-brand bg-brand px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
             >
               <FiCheck size={16} />
-
-              {markingAll
-                ? "Marking..."
-                : "Mark All Read"}
+              {markingAll ? "Marking..." : "Mark All Read"}
             </button>
           )}
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="flex min-h-[300px] items-center justify-center rounded-admin-lg border border-border bg-surface">
             <div className="flex items-center gap-3 text-sm text-text-muted">
-              <FiRefreshCw
-                size={18}
-                className="animate-spin"
-              />
-
+              <FiRefreshCw size={18} className="animate-spin" />
               <span>Loading notifications...</span>
             </div>
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && notifications.length === 0 && (
           <div className="flex min-h-[300px] flex-col items-center justify-center rounded-admin-lg border border-border bg-surface px-6 text-center shadow-admin-sm">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand">
@@ -172,13 +145,11 @@ const NotificationList = ({
             </h2>
 
             <p className="mt-1 max-w-sm text-sm text-text-muted">
-              You're all caught up. New notifications
-              will appear here.
+              You're all caught up. New notifications will appear here.
             </p>
           </div>
         )}
 
-        {/* Notifications */}
         {!loading && notifications.length > 0 && (
           <>
             <div className="space-y-3">
@@ -191,7 +162,6 @@ const NotificationList = ({
               ))}
             </div>
 
-            {/* Pagination */}
             <Pagination
               currentPage={page}
               total={totalNotification}

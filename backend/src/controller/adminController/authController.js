@@ -19,7 +19,7 @@ export const Login = async (req, res) => {
 
     if (email === env.admin_email && password === env.admin_pass) {
 
-      // Find admin from MongoDB
+      
       const admin = await userServices.getdatabyfindOne({
         email: env.admin_email,
         role: "admin",
@@ -31,7 +31,6 @@ export const Login = async (req, res) => {
         );
       }
 
-      // Put MongoDB _id in JWT
       const token = await generateToken({
         id: admin._id,
         role: admin.role,

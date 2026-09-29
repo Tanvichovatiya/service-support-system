@@ -2,49 +2,39 @@ const addCommentModal = document.getElementById("addCommentModal");
 const addCommentForm = document.getElementById("addCommentForm");
 
 const closeAddCommentModal = document.getElementById(
-    "closeAddCommentModal",
+    "closeAddCommentModal"
 );
-
 const cancelAddCommentModal = document.getElementById(
-    "cancelAddCommentModal",
+    "cancelAddCommentModal"
 );
 
-const commentRequestId = document.getElementById(
-    "commentRequestId",
-);
-
+const commentRequestId = document.getElementById("commentRequestId");
 const commentRequestTitle = document.getElementById(
-    "commentRequestTitle",
+    "commentRequestTitle"
 );
-
-const commentMessage = document.getElementById(
-    "commentMessage",
-);
-
+const commentMessage = document.getElementById("commentMessage");
 const commentMessageError = document.getElementById(
-    "commentMessageError",
+    "commentMessageError"
 );
 
 const submitCommentButton = document.getElementById(
-    "submitCommentButton",
+    "submitCommentButton"
 );
-
 const submitCommentIcon = document.getElementById(
-    "submitCommentIcon",
+    "submitCommentIcon"
 );
-
 const submitCommentText = document.getElementById(
-    "submitCommentText",
+    "submitCommentText"
 );
 
 document.addEventListener("click", (event) => {
     const button = event.target.closest(".add-comment-btn");
 
-    if (!button) return;
+    if (!button) {
+        return;
+    }
 
-    const requestId = button.dataset.id;
-
-    openAddCommentModal(requestId);
+    openAddCommentModal(button.dataset.id);
 });
 
 function openAddCommentModal(requestId) {
@@ -54,12 +44,10 @@ function openAddCommentModal(requestId) {
     }
 
     commentRequestId.value = requestId;
-
+    commentRequestTitle.textContent = "Service Request";
     commentMessage.value = "";
 
     clearCommentError();
-
-    commentRequestTitle.textContent = "Service Request";
 
     addCommentModal.classList.remove("hidden");
     addCommentModal.classList.add("flex");
@@ -79,21 +67,20 @@ function closeCommentModal() {
 
     addCommentForm.reset();
 
-    clearCommentError();
-
     commentRequestTitle.textContent = "Service Request";
 
+    clearCommentError();
     setCommentLoading(false);
 }
 
 closeAddCommentModal.addEventListener(
     "click",
-    closeCommentModal,
+    closeCommentModal
 );
 
 cancelAddCommentModal.addEventListener(
     "click",
-    closeCommentModal,
+    closeCommentModal
 );
 
 addCommentModal.addEventListener("click", (event) => {
@@ -113,19 +100,17 @@ document.addEventListener("keydown", (event) => {
 
 function clearCommentError() {
     commentMessageError.textContent = "";
-
     commentMessageError.classList.add("hidden");
 
     commentMessage.classList.remove(
         "border-danger",
         "focus:border-danger",
-        "focus:ring-danger/10",
+        "focus:ring-danger/10"
     );
 }
 
 function showCommentError(message) {
     commentMessageError.textContent = message;
-
     commentMessageError.classList.remove("hidden");
 
     commentMessage.classList.add("border-danger");
@@ -138,17 +123,16 @@ addCommentForm.addEventListener("submit", async (event) => {
 
     clearCommentError();
 
-    const reqid= commentRequestId.value;
-
+    const requestId = commentRequestId.value.trim();
     const message = commentMessage.value.trim();
 
-   
+    if (!requestId) {
+        window.toast?.error?.("Invalid service request.");
+        return;
+    }
 
     if (!message) {
-        showCommentError(
-            "Please enter a comment.",
-        );
-
+        showCommentError("Please enter a comment.");
         return;
     }
 
@@ -156,49 +140,38 @@ addCommentForm.addEventListener("submit", async (event) => {
 
     try {
         const response = await fetch(
-            `/servicerequest/addcomment/${reqid}`,
+            `/servicerequest/addcomment/${requestId}`,
             {
                 method: "POST",
-
+                credentials: "include",
                 headers: {
                     "Content-Type": "application/json",
                 },
-
-                credentials: "include",
-
                 body: JSON.stringify({
                     message,
                 }),
-            },
+            }
         );
 
         const result = await response.json();
 
         if (!response.ok) {
             throw new Error(
-                result.message ||
-                "Failed to add comment.",
+                result.message || "Failed to add comment."
             );
         }
 
-        window.toast.success(
-            result.message ||
-            "Comment added successfully.",
+        window.toast?.success?.(
+            result.message || "Comment added successfully."
         );
 
         closeCommentModal();
-
     } catch (error) {
-        console.error(
-            "Add comment error:",
-            error,
-        );
+        console.error("Add comment error:", error);
 
         window.toast?.error?.(
-            error.message ||
-            "Failed to add comment.",
+            error.message || "Failed to add comment."
         );
-
     } finally {
         setCommentLoading(false);
     }
@@ -206,23 +179,13 @@ addCommentForm.addEventListener("submit", async (event) => {
 
 function setCommentLoading(isLoading) {
     submitCommentButton.disabled = isLoading;
+    commentMessage.disabled = isLoading;
 
-    if (isLoading) {
-        submitCommentIcon.className =
-            "fa-solid fa-spinner fa-spin text-xs";
+    submitCommentIcon.className = isLoading
+        ? "fa-solid fa-spinner fa-spin text-xs"
+        : "fa-solid fa-paper-plane text-xs";
 
-        submitCommentText.textContent =
-            "Adding Comment";
-
-        commentMessage.disabled = true;
-
-    } else {
-        submitCommentIcon.className =
-            "fa-solid fa-paper-plane text-xs";
-
-        submitCommentText.textContent =
-            "Add Comment";
-
-        commentMessage.disabled = false;
-    }
+    submitCommentText.textContent = isLoading
+        ? "Adding Comment..."
+        : "Add Comment";
 }

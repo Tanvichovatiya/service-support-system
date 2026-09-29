@@ -11,7 +11,7 @@ import { generateToken } from "../utils/jwt.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
 import env from "../config/env.js";
 import crypto from "crypto";
-import { sendForgotPasswordMail } from "../utils/sendforgotPasswordMail.js";
+import { sendForgotPasswordMail, sendRegisterMail } from "../utils/sendforgotPasswordMail.js";
 
 export const registerUser = async (req, res) => {
   try {
@@ -30,7 +30,7 @@ export const registerUser = async (req, res) => {
     if (req.file) {
       try {
         const cloudinaryRes = await uploadToCloudinary(req.file);
-        console.log("cloudinary res:", cloudinaryRes);
+      
         profilePic = cloudinaryRes.secure_url;
       } catch (err) {
         console.log("err:", err);
@@ -60,65 +60,12 @@ export const registerUser = async (req, res) => {
       otpExpiry: new Date(Date.now() + 10 * 60 * 1000),
       isUsed: false,
     });
+   
 
-    await sendMail({
-      to: user.email,
-
-      subject: "Service Support System - Email Verification",
-
-      html: `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8" />
-            <title>Email Verification</title>
-          </head>
-
-          <body style="margin: 0; padding: 0; background-color: #f4f4f4; font-family: Arial, sans-serif;">
-
-            <div style=" max-width: 600px; margin: 40px auto; background: #ffffff; padding: 30px;
-                border-radius: 10px;">
-
-              <h2>
-                Welcome to Service Support System
-              </h2>
-
-              <p>
-                Hello ${firstname},
-              </p>
-
-              <p>
-                Thank you for registering.
-                Please use the following OTP
-                to verify your email address.
-              </p>
-
-              <div style=" margin: 25px 0; text-align: center; font-size: 32px; font-weight: bold;
-                  letter-spacing: 8px;">
-                ${otp}
-              </div>
-
-              <p>
-                This OTP will expire in
-                <strong>10 minutes</strong>.
-              </p>
-
-              <p>
-                If you did not create this account,
-                please ignore this email.
-              </p>
-
-              <hr />
-
-              <p style="color: #777; font-size: 12px;">
-                Service Support System
-              </p>
-
-            </div>
-
-          </body>
-        </html>
-      `,
+    await sendRegisterMail({
+      email: user.email,
+      firstname,
+      otp,
     });
 
     return successResponse(res, {
@@ -203,10 +150,10 @@ export const login = async (req, res) => {
       });
     }
 
-    if (!user.isActive) {
+    if (user.isDeleted) {
       return errorResponse(res, {
         statusCode: 403,
-        message: "Your account is inactive",
+        message: "Your account is Deleted",
       });
     }
 
@@ -219,21 +166,13 @@ export const login = async (req, res) => {
     }
     const token = generateToken({ id: user._id, role: user.role });
 
-    const userData = {
-      id: user._id,
-      email: user.email,
-      role: user.role,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      profilePic: user.profilePic,
-    };
-
     return successResponse(res, {
       statusCode: 200,
       message: "login Successfully",
-      data: { token, user: userData },
+      data: { token, user:{id: user._id, role: user.role,}},
     });
   } catch (error) {
+
     console.log("err:", error);
     return errorResponse(res, {
       statusCode: 500,
@@ -300,8 +239,8 @@ export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    //  console.log("email:",email)
-    const user = await userServices.getData({ email });
+   
+    const user = await userServices.getData({ email:email });
 
     if (!user) {
       return successResponse(res, {
@@ -313,10 +252,9 @@ export const forgotPassword = async (req, res) => {
 
     const resetToken = crypto.randomBytes(32).toString("hex");
 
-    const hashedResetToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
+    const hashedResetToken = crypto.createHash("sha256").update(resetToken)
       .digest("hex");
+      
     const resetExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     await userServices.updateOne(

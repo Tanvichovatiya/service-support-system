@@ -29,7 +29,7 @@
 
     <main class="flex min-w-0 flex-1 flex-col overflow-hidden">
 
-      <header class="shrink-0 border-b border-border bg-surface shadow-admin">
+      <header class="shrink-0 border-b border-border bg-accent-soft">
 
         <div class="mx-auto w-full max-w-5xl px-4 py-5 sm:px-6">
 
@@ -69,7 +69,7 @@
            
             id="editStaffForm"
             data-staff-id="<%= staff._id %>"
-            class="overflow-hidden rounded-admin-xl border border-border bg-surface shadow-admin">
+            class="overflow-hidden rounded-admin-xl border-2 border-brand bg-surface hover:shadow-admin-hover">
 
             <div class="border-b border-border p-5 sm:p-8">
 
@@ -342,156 +342,10 @@
               </div>
 
             </div>
+            <%- include('../../partials/skill-section', {
+  selectedSkillsData: staff.skills
+}) %>
 
-
-
-            <div class="border-b border-border p-5 sm:p-8">
-
-              <div class="mb-6">
-
-                <div class="mb-2 flex items-center gap-3">
-
-                  <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-admin bg-brand-soft text-brand">
-                    <i class="fa-solid fa-screwdriver-wrench"></i>
-                  </div>
-
-                  <h2 class="text-lg font-bold text-heading">
-                    Skills
-                  </h2>
-
-                </div>
-
-                <p class="text-sm leading-6 text-text-secondary">
-                  Select skills that can help with service request assignment.
-                </p>
-
-              </div>
-
-
-              <%
-                const availableSkills = [
-                  "Technical Support",
-                  "Networking",
-                  "Hardware",
-                  "Software",
-                  "Database",
-                  "System Administration",
-                  "IT Support",
-                  "Customer Support"
-                ];
-              %>
-
-
-              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-
-                <% availableSkills.forEach((skill) => { %>
-
-                  <label
-                    class="skill-card group flex cursor-pointer items-center gap-3  p-3  "
-                  >
-
-                   <input
-                    type="checkbox"
-                    name="skills"
-                    value="<%= skill %>"
-                    <%= Array.isArray(staff.skills) && staff.skills.includes(skill) ? "checked" : "" %>
-                     class="skill-checkbox h-4 w-4 cursor-pointer rounded border-input-border accent-brand"/>
-                    
-
-                    <span class="skill-label text-sm font-medium text-text-secondary ">
-                      <%= skill %>
-                    </span>
-
-                  </label>
-
-                <% }) %>
-
-              </div>
-
-              <p
-                id="skillsError"
-                class="mt-3 hidden text-sm font-medium text-danger"
-              >
-                Please select at least one skill.
-              </p>
-
-            </div>
-
-
-            <div class="  sm:p-8">
-
-              <div id="staffStatusWrapper">
-
-                <label
-                  for="staffStatus"
-                  class="flex cursor-pointer items-center justify-between rounded-admin border border-border bg-brand-soft px-4 py-4 transition hover:border-brand hover:shadow-admin-sm"
-                >
-
-                  <div class="flex min-w-0 items-center gap-3">
-
-                    <!-- Status Icon -->
-                    <div
-                      id="staffStatusIconWrapper"
-                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success-light text-success"
-                    >
-
-                      <i
-                        id="staffStatusIcon"
-                        class="fa-solid fa-circle-check"
-                      ></i>
-
-                    </div>
-
-
-                    <!-- Status Text -->
-                    <div class="min-w-0">
-
-                      <p
-                        id="staffStatusTitle"
-                        class="text-sm font-semibold text-heading"
-                      >
-                        Active Staff
-                      </p>
-
-                      <p
-                        id="staffStatusDescription"
-                        class="mt-1 text-xs leading-5 text-text-secondary"
-                      >
-                        Staff can access the system and receive service requests.
-                      </p>
-
-                    </div>
-
-                  </div>
-
-
-                  <!-- Toggle -->
-                  <div class="relative ml-4 shrink-0">
-
-                    <input
-                      type="checkbox"
-                      id="staffStatus"
-                      name="isActive"
-                      value="true"
-                      <%= staff.isActive ? "checked" : "" %>
-                      class="peer sr-only"
-                    >
-
-                    <div
-                      class="h-6 w-11 rounded-full bg-border-dark transition-colors peer-checked:bg-brand peer-focus-visible:ring-4 peer-focus-visible:ring-brand/20"
-                    ></div>
-
-                    <div
-                      class="absolute left-1 top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5"
-                    ></div>
-
-                  </div>
-
-                </label>
-
-              </div>
-
-            </div>
 
             <div class="flex flex-col-reverse gap-3 bg-surface px-5 py-5 sm:flex-row sm:justify-end sm:px-8">
 
@@ -531,6 +385,7 @@
 
 
   <script src="/js/editStaff.js"></script>
+  <script src="/js/staffSkills.js"></script>
  <script src="/js/adminNotification.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/adminSocket.js"></script>

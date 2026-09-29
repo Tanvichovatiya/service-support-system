@@ -1,22 +1,26 @@
 import ServiceRequestServices from "../services/ServiceRequestServices.js";
 import staffServices from "../services/staffServcies.js";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
-import mongoose from "mongoose";
 
-export const getStaffPerformance = async (req, res) => {
+import { toObjectId } from "../utils/convertToObjectId.js";
+
+export const getStaffdashboard = async (req, res) => {
   try {
-    const { id: userId, role } = req.user;
+    const { id: userId } = req.user;
 
-    const staff = await staffServices.getdatabyfindOne({
-      userId: new mongoose.Types.ObjectId(userId),
-    });
-
-    const staffId = staff._id;
+    const staff = await staffServices.getdatabyfindOne(
+      {
+        userId: toObjectId(userId),
+      },
+      "_id",
+    );
+  
+  
 
     const result = await ServiceRequestServices.getAggData([
       {
         $match: {
-          assignedStaffId: new mongoose.Types.ObjectId(staffId),
+          assignedStaffIds: toObjectId(staff._id),
         },
       },
 
@@ -28,7 +32,7 @@ export const getStaffPerformance = async (req, res) => {
                 _id: null,
 
                 totalAssigned: {
-                   $sum: {
+                  $sum: {
                     $cond: [
                       {
                         $eq: ["$status", "assigned"],
@@ -102,9 +106,9 @@ export const getStaffPerformance = async (req, res) => {
 
           recentRequests: [
             {
-              $match:{
-                status:"assigned"
-              }
+              $match: {
+                status: "assigned",
+              },
             },
             {
               $sort: {

@@ -10,8 +10,9 @@ export const sendMail = async ({to,subject,html,}) => {
       subject,
       html,
     });
+    // console.log("info:",info)
 
-    console.log("Email sent:", info.messageId);
+    // console.log("Email sent:", info.messageId);
 
     return info;
   } catch (error) {

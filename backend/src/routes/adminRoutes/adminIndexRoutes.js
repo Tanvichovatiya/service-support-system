@@ -6,6 +6,7 @@ import dashboardRoutes from "./dashboardRoutes/dashboardRoutes.js";
 import mngCategoryRoutes from "./mngCategoryRoutes/mngCategoryRoute.js";
 import mngServiceRequestRoutes from "./mngServiceRequestRoutes/mngServiceRequestRoutes.js";
 import mnguserRoutes from "./mngUserRoutes/mngUserRoutes.js";
+import adminnotificationRoutes from "./notificationRoutes/notificationRoutes.js";
 
 
 
@@ -17,5 +18,6 @@ adminIndexRoutes.use("/",dashboardRoutes);
 adminIndexRoutes.use('/category',mngCategoryRoutes)
 adminIndexRoutes.use('/servicerequest',mngServiceRequestRoutes)
 adminIndexRoutes.use('/user',mnguserRoutes)
+adminIndexRoutes.use('/notification',adminnotificationRoutes)
 
 export default adminIndexRoutes;

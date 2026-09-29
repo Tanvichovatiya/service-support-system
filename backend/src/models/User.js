@@ -49,9 +49,9 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
-    isActive: {
+    isDeleted: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     passwordSetupToken: {
      type: String,

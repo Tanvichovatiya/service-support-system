@@ -152,27 +152,14 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
 
-
-    const activeBadge =
-      document.getElementById("staffActiveBadge");
-
-    activeBadge.textContent =
-      user.isActive ? "Active" : "Inactive";
-
-    activeBadge.className =
-      user.isActive
-        ? "rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700"
-        : "rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700";
-
-
     const onlineBadge =
       document.getElementById("staffOnlineBadge");
 
     onlineBadge.textContent =
-      staff.isOnline ? "Online" : "Offline";
+      user.isOnline ? "Online" : "Offline";
 
     onlineBadge.className =
-      staff.isOnline
+      user.isOnline
         ? "rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700"
         : "rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600";
 
@@ -233,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!Array.isArray(requests) || requests.length === 0) {
       container.innerHTML = `
         <div
-          class="rounded-xl  shadow-admin p-6 text-center"
+          class="rounded-xl border-[1.4px] border-brand  hover:shadow-admin-hover p-6 text-center"
         >
           <div
             class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-400"

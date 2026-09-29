@@ -4,27 +4,22 @@ import mongoose from "mongoose";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
 import { redisKeys } from "../utils/redisKey.js";
 import redisServices from "../services/redis/redisServices.js";
+import { getPagination } from "../utils/queryHelper.js";
+import { toObjectId } from "../utils/convertToObjectId.js";
 
 export const getUnreadNotifications = async (req, res) => {
   try {
     const { id: userId } = req.user;
 
-    const { page = 1, limit = 10 } = req.query;
+    const { page, skip, limit } = getPagination(req.query, 10);
 
-    const pageNumber = Math.max(Number(page), 1);
-    const limitNumber = Math.min(Math.max(Number(limit), 1), 50);
-    const skip = (pageNumber - 1) * limitNumber;
-
-    const receiverId = new mongoose.Types.ObjectId(userId);
-
-    const match = {
-      receiverId,
-      isRead: false,
-    };
 
     const notifications = await notificationServices.getAggData([
       {
-        $match: match,
+        $match: {
+          receiverId: toObjectId(userId),
+          isRead: false,
+        },
       },
 
       {
@@ -53,7 +48,7 @@ export const getUnreadNotifications = async (req, res) => {
 
           type: 1,
           message: 1,
-          actions: 1,
+          // actions: 1,
 
           isRead: 1,
           readAt: 1,
@@ -64,9 +59,7 @@ export const getUnreadNotifications = async (req, res) => {
           "sender._id": 1,
           "sender.firstname": 1,
           "sender.lastname": 1,
-          "sender.email": 1,
           "sender.profilePic": 1,
-          "sender.role": 1,
         },
       },
 
@@ -81,10 +74,9 @@ export const getUnreadNotifications = async (req, res) => {
       },
 
       {
-        $limit: limitNumber,
+        $limit: limit,
       },
     ]);
-    // console.log("unreadnotfications list:", notifications);
 
     const total = await notificationServices.countUnread(userId);
 
@@ -94,10 +86,10 @@ export const getUnreadNotifications = async (req, res) => {
       data: {
         notifications,
         pagination: {
-          page: pageNumber,
-          limit: limitNumber,
+          page,
+          limit,
           total,
-          totalPages: Math.ceil(total / limitNumber),
+          totalPages: Math.ceil(total / limit),
         },
       },
     });
@@ -118,15 +110,15 @@ export const getUnreadNotificationCount = async (req, res) => {
     const redisKey = redisKeys.notification.unreadCount(userId);
 
     let unreadCount = await redisServices.get(redisKey);
-    // console.log("unreadCount:",unreadCount)
+    console.log("redis unreadCount:",unreadCount)
 
     if (unreadCount === null) {
       unreadCount = await notificationServices.countUnread(userId);
 
       await redisServices.set(redisKey, unreadCount);
     }
-    // console.log("unreadCount:",unreadCount)
-    // let unreadCount = await notificationServices.countUnread(userId);
+     console.log("unreadCount:",unreadCount)
+   
     return successResponse(res, {
       statusCode: 200,
       message: "Unread count fetched successfully",
@@ -150,17 +142,10 @@ export const markNotificationAsRead = async (req, res) => {
     const { id: userId } = req.user;
     const { notificationId } = req.params;
 
-    const notification = await notificationServices.markAsRead(
+    await notificationServices.markAsRead(
       notificationId,
       userId,
     );
-
-    if (!notification) {
-      return errorResponse(res, {
-        statusCode: 404,
-        message: "Unread notification not found.",
-      });
-    }
 
     const unreadCount = await notificationServices.countUnread(userId);
 
@@ -175,6 +160,7 @@ export const markNotificationAsRead = async (req, res) => {
         unreadCount,
       },
     });
+
   } catch (error) {
     console.log("markNotificationAsRead error:", error);
 
@@ -200,12 +186,12 @@ export const markAllNotificationsAsRead = async (req, res) => {
       statusCode: 200,
       message: "All notifications marked as read successfully",
       data: {
-        modifiedCount: result.modifiedCount,
         unreadCount: 0,
       },
     });
+
   } catch (error) {
-    console.log("markAllNotificationsAsRead error:", error);
+    console.log("error:", error);
 
     return errorResponse(res, {
       statusCode: 500,

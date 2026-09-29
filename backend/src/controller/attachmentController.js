@@ -34,7 +34,7 @@ export const downloadAttachment = async (req,res) => {
     const { attachmentId } = req.params;
 
     const { attachment, filePath } = await getAttachmentFilePath(attachmentId);
-    console.log("attachmentId:",attachmentId,filePath)
+    // console.log("attachmentId:",attachmentId,filePath)
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
@@ -43,17 +43,11 @@ export const downloadAttachment = async (req,res) => {
       });
     }
 
-    return res.download(
-      filePath,
-      attachment.originalName ||
-        attachment.fileName ||
-        "attachment",
+    return res.download(filePath,attachment.originalName ||attachment.fileName || "attachment",
       (error) => {
         if (error) {
-          console.error(
-            "File download error:",
-            error
-          );
+          
+          console.log("File download error:",error);
 
           if (!res.headersSent) {
             return res.status(500).json({

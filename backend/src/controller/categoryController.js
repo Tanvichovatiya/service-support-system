@@ -1,5 +1,6 @@
 import { categoryServices } from "../services/categoryServices.js";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
+import { buildRegexSearch, getPagination } from "../utils/queryHelper.js";
 
 export const getActiveCategory = async (req, res) => {
   try {
@@ -15,7 +16,6 @@ export const getActiveCategory = async (req, res) => {
           name: 1,
         },
       },
-     
     ];
 
     const aggResult = await categoryServices.getAggData(aggPipeline);
@@ -36,36 +36,18 @@ export const getActiveCategory = async (req, res) => {
   }
 };
 
-
-
 export const getCategories = async (req, res) => {
   try {
-    const page = Number(req.query.page) || 1;
-    const limit = 6;
-
+    const { page, limit, skip } = getPagination(req.query, 6);
     const search = req.query.search?.trim() || "";
-
-    const skip = (page - 1) * limit;
 
     const matchStage = {
       isActive: true,
     };
 
-    if (search) {
-      matchStage.$or = [
-        {
-          name: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          description: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-      ];
+    const searchStage = buildRegexSearch(search, ["name", "description"]);
+    if (searchStage) {
+      Object.assign(matchStage, searchStage);
     }
 
     const aggPipeline = [
@@ -117,10 +99,9 @@ export const getCategories = async (req, res) => {
         categories,
         page,
         limit,
-        totalCategories : total,
+        totalCategories: total,
         totalPages,
-      }
-     
+      },
     });
   } catch (error) {
     console.error("Get categories error:", error);
