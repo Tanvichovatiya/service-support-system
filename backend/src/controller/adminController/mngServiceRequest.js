@@ -336,10 +336,7 @@ export const getRequestById = async (req, res) => {
           pipeline: [
             {
               $project: {
-                // _id: 1,
-                name: 1,
-                // description: 1,
-                // isActive: 1,
+                name: 1,      
               },
             },
           ],
@@ -364,8 +361,6 @@ export const getRequestById = async (req, res) => {
                 _id: 1,
                 userId: 1,
                 employeeId: 1,
-                // department: 1,
-                // skills: 1,
               },
             },
             {
@@ -420,8 +415,6 @@ export const getRequestById = async (req, res) => {
                 _id: 1,
                 userId: 1,
                 employeeId: 1,
-                // department: 1,
-                // skills: 1,
               },
             },
             {
@@ -564,30 +557,17 @@ export const getRequestById = async (req, res) => {
       {
         $project: {
           _id: 1,
-
           title: 1,
           description: 1,
           priority: 1,
           status: 1,
-
           createdAt: 1,
           updatedAt: 1,
-
-          // assignedAt: 1,
-          // startedAt: 1,
-          // completedAt: 1,
-
           user: 1,
           category: 1,
-
           assignedStaff: 1,
           acceptedStaff: 1,
-
-          // assignedStaffIds: 1,
-          // acceptedStaffIds: 1,
-
           attachments: 1,
-          // comments: 1,
           history: 1,
         },
       },
@@ -1442,13 +1422,7 @@ export const getServiceRequestForReassign = async (req, res) => {
 
     const result = await ServiceRequestServices.getAggData(pipeline);
 
-    if (!result.length) {
-      return errorResponse(res, {
-        statusCode: 404,
-        message: "Service request not found",
-      });
-    }
-
+   
     return successResponse(res, {
       statusCode: 200,
       message: "Service request fetched successfully",

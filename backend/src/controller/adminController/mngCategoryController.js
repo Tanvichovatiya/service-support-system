@@ -33,8 +33,6 @@ export const createCategory = async (req, res) => {
     }
     const category = await categoryServices.create({ name, description });
 
-    // await redisServices.delete(redisKeys.category.all());
-
     await auditLogServices.create({
       userId: req.user.id,
       action: "CATEGORY_CREATED",
@@ -106,8 +104,6 @@ export const editCategory = async (req, res) => {
     ]);
 
     await categoryServices.updateOne({ _id: id }, { $set: updateData });
-
-    // await redisServices.delete(redisKeys.category.all());
 
     await redisServices.delete(redisKeys.category.byId(id));
 
@@ -184,7 +180,6 @@ export const EditCategoryStatus = async (req, res) => {
       },
     );
 
-    // await redisServices.delete(redisKeys.category.all());
 
     await redisServices.delete(redisKeys.category.byId(id));
 
@@ -209,12 +204,6 @@ export const EditCategoryStatus = async (req, res) => {
       userAgent: req.get("user-agent"),
     });
 
-    // return redirectSuccess(res, {
-    //   url: "/admin/category",
-    //   message: newStatus
-    //     ? "Category activated successfully"
-    //     : "Category deactivated successfully",
-    // });
     return res.redirect("/admin/category");
   } catch (error) {
     console.error(" error:", error);
@@ -315,9 +304,7 @@ export const getCategories = async (req, res) => {
           name: 1,
           description: 1,
           isActive: 1,
-          // createdAt: 1,
-          // updatedAt: 1,
-
+    
           totalRequests: {
             $ifNull: [
               {

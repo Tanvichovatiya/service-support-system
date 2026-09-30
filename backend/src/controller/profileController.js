@@ -10,7 +10,7 @@ export const getUserProfile = async (req, res) => {
 
     const user = await userServices.getDatabyId(
       userId,
-      "-password -passwordSetupToken -passwordSetupExpires -role -email -isEmailVerified ",
+      "-password -passwordSetupToken -passwordSetupExpires -role  -isEmailVerified ",
     );
 
    

@@ -9,8 +9,7 @@ export default function Layout ({children}){
       <SocketProvider>
         <StaffLayout>
           {children}
-        </StaffLayout>
-        
+        </StaffLayout>        
       </SocketProvider>      
     </ProtectedRoute>
    )

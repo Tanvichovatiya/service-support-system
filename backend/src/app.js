@@ -1,4 +1,3 @@
-
 import express from 'express'
 import dotenv from "dotenv";
 import cors from "cors";
@@ -10,20 +9,13 @@ import errorMiddleware from './middleware/error.middleware.js';
 import env from './config/env.js';
 import { connectRedis } from './config/redis.js';
 import adminIndexRoutes from './routes/adminRoutes/adminIndexRoutes.js';
-
 import http from "http"
 import { initSocket } from './socket/initSocket.js';
 import apiRateLimit from './middleware/apiRateLimit.js';
 import { startJobs } from './jobs/index.js';
-import { seedCategories } from './seed/seedCategory.js';
-import { seedSeptemberServiceRequests } from './seed/seedServiceREq.js';
 
-
-
-
-
+await connectDB()
 dotenv.config()
-
 
 const app = express()
 
@@ -37,8 +29,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
-//app.use(apiRateLimit({limit:100,windowSeconds:15*60}))
-
+app.use(apiRateLimit({limit:100,windowSeconds:15*60}))
 
 
 app.use(cookieParser())
@@ -48,12 +39,6 @@ app.set("views", "./views");
 
 app.use(express.static("public"))
 
-// seedAdmin()
-// seedUsersAndStaff()
-// seedCategories()
-// seedServiceRequests()
-// seedSeptemberServiceRequests()
-
 app.get("/",(req,res)=>res.redirect("/admin/login"))
 
 app.use("/",indexRoutes)
@@ -61,7 +46,6 @@ app.use("/admin",adminIndexRoutes)
 app.use(notFoundMiddleware)
 app.use(errorMiddleware)
 
-await connectDB()
 await connectRedis()
 startJobs()
 

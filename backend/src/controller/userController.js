@@ -57,10 +57,7 @@ export const getMyRequestStaff = async (req, res) => {
       {
         $project: {
           _id: "$staff._id",
-          // employeeId: "$staff.employeeId",
-          // department: "$staff.department",
-          // skills: "$staff.skills",
-
+        
           userId: "$user._id",
           firstname: "$user.firstname",
           lastname: "$user.lastname",

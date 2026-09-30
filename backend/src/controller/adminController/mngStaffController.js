@@ -189,7 +189,7 @@ export const getStaff = async (req, res) => {
     const staff = data.staff || [];
     const totalStaff = data.totalStaff?.[0]?.count || 0;
     const totalPages = Math.ceil(totalStaff / limit);
-    console.log(staff);
+  
     return res.render("admin/staff/index", {
       staff,
       pagination: {
@@ -509,7 +509,7 @@ export const renderEditStaff = async (req, res) => {
     ];
 
     const aggResult = await staffServices.getAggData(aggpipiline);
-    //  console.log("aggResult:",aggResult[0]);
+ 
     return res.render("admin/staff/editStaff", {
       staff: aggResult[0],
       error: null,

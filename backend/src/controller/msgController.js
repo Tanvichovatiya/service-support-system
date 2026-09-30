@@ -1,18 +1,14 @@
-import mongoose from "mongoose";
-import path from "path";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
 import { getIo } from "../socket/initSocket.js";
 import { attachmentServices } from "../services/attachmentServices.js";
 import { MessageServices } from "../services/MessageServices.js";
 import { toObjectId } from "../utils/convertToObjectId.js";
 
-
 export const sendMessage = async (req, res) => {
   try {
     const { id: senderId, role } = req.user;
     const { receiverId } = req.params;
-    const message  = req.body.message;
+    const message = req.body.message;
 
     let attachmentIds = [];
 
@@ -28,7 +24,6 @@ export const sendMessage = async (req, res) => {
       attachmentIds.push(attachment._id);
     }
 
-  
     const newMessage = await MessageServices.createData({
       senderId,
       receiverId,
@@ -92,13 +87,11 @@ export const sendMessage = async (req, res) => {
 
     io.to(receiverRoom).emit("receive-message", populatedMessage);
 
- 
     return res.status(201).json({
       success: true,
       message: "Message sent successfully",
       data: populatedMessage,
     });
-
   } catch (error) {
     console.error("Send message error:", error);
 
@@ -109,17 +102,14 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-
 export const loadMessage = async (req, res) => {
   try {
     const { id: userId, role } = req.user;
     const { receiverId } = req.params;
 
-
-     const currentUserId = toObjectId(userId);
+    const currentUserId = toObjectId(userId);
     const otherUserId = toObjectId(receiverId);
 
-   
     await MessageServices.updateMany(
       {
         senderId: otherUserId,
@@ -130,10 +120,9 @@ export const loadMessage = async (req, res) => {
         $set: {
           isRead: true,
         },
-      }
+      },
     );
 
-    
     const messages = await MessageServices.getAggData([
       {
         $match: {
@@ -167,7 +156,7 @@ export const loadMessage = async (req, res) => {
           message: 1,
           isRead: 1,
           createdAt: 1,
-          updatedAt:1,
+          updatedAt: 1,
 
           attachments: {
             _id: 1,
@@ -187,7 +176,6 @@ export const loadMessage = async (req, res) => {
       },
     ]);
 
-   
     const io = getIo();
 
     let senderRoom;
@@ -197,8 +185,6 @@ export const loadMessage = async (req, res) => {
     } else if (role === "staff") {
       senderRoom = `user:${receiverId}`;
     }
-
-   
 
     if (senderRoom) {
       io.to(senderRoom).emit("markMessageAsSeen", {
@@ -215,7 +201,6 @@ export const loadMessage = async (req, res) => {
         curuser: userId,
       },
     });
-
   } catch (error) {
     console.log("loadMessage error:", error);
 

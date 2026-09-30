@@ -4,32 +4,34 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "motion/react";
 import {
-  FiBriefcase,
-  FiClock,
-  FiCheckCircle,
   FiActivity,
-  FiEye,
-  FiCheck,
-  FiArrowRight,
-  FiRefreshCw,
   FiAlertCircle,
+  FiArrowRight,
+  FiBriefcase,
   FiCalendar,
+  FiCheck,
+  FiCheckCircle,
+  FiClock,
+  FiEye,
   FiLayers,
+  FiRefreshCw,
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 
 import { getStaffPerformance } from "@/axiosApi/staffApi";
-import { acceptAssignedRequest } from "@/axiosApi/serviceRequestApi"
+import { acceptAssignedRequest } from "@/axiosApi/serviceRequestApi";
 
 import {
-  fadeUp,
   fadeLeft,
   fadeRight,
+  fadeUp,
 } from "@/components/ui/Animation";
+
 import {
-  getStatusStyle,
   getPriorityStyle,
+  getStatusStyle,
 } from "@/helperFunction/statusStyle";
+import { formatDate } from "@/helperFunction/formateDate";
 
 const StaffDashboard = () => {
   const router = useRouter();
@@ -39,38 +41,27 @@ const StaffDashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [acceptingId, setAcceptingId] = useState(null);
 
-
-
-  const fetchDashboard = useCallback(
-    async (isRefresh = false) => {
-      try {
-        if (isRefresh) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
-
-        const data = await getStaffPerformance();
-
-        setDashboard(data);
-      } catch (error) {
-        console.error(
-          "Failed to fetch staff performance:",
-          error
-        );
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
+  const fetchDashboard = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
       }
-    },
-    []
-  );
+
+      const data = await getStaffPerformance();
+      setDashboard(data);
+    } catch (error) {
+      console.error("Failed to fetch staff performance:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
-
-
 
   const handleAccept = async (requestId) => {
     if (!requestId || acceptingId) {
@@ -81,20 +72,13 @@ const StaffDashboard = () => {
       setAcceptingId(requestId);
 
       await acceptAssignedRequest(requestId);
-
-      // Refresh dashboard after accepting
       await fetchDashboard(true);
     } catch (error) {
-      console.error(
-        "Failed to accept request:",
-        error
-      );
+      console.error("Failed to accept request:", error);
     } finally {
       setAcceptingId(null);
     }
   };
-
-
 
   const handleView = (requestId) => {
     if (!requestId) {
@@ -105,38 +89,14 @@ const StaffDashboard = () => {
   };
 
 
-
-  const formatDate = (date) => {
-    if (!date) {
-      return "—";
-    }
-
-    return new Date(date).toLocaleDateString([], {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-
-
   const formatDuration = (milliseconds) => {
     if (!milliseconds || milliseconds <= 0) {
       return "—";
     }
 
-    const totalMinutes = Math.round(
-      milliseconds / (1000 * 60)
-    );
-
-    const days = Math.floor(
-      totalMinutes / (60 * 24)
-    );
-
-    const hours = Math.floor(
-      (totalMinutes % (60 * 24)) / 60
-    );
-
+    const totalMinutes = Math.round(milliseconds / (1000 * 60));
+    const days = Math.floor(totalMinutes / (60 * 24));
+    const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
     const minutes = totalMinutes % 60;
 
     if (days > 0) {
@@ -150,11 +110,6 @@ const StaffDashboard = () => {
     return `${minutes}m`;
   };
 
-
-  // ==========================================
-  // LOADING
-  // ==========================================
-
   if (loading) {
     return (
       <main className="min-h-[calc(100vh-72px)] bg-background px-4 py-6 sm:px-6 lg:px-8">
@@ -162,10 +117,7 @@ const StaffDashboard = () => {
           <div className="flex min-h-[500px] items-center justify-center rounded-admin-xl border border-border bg-surface shadow-admin-sm">
             <div className="flex flex-col items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-brand">
-                <FiRefreshCw
-                  size={21}
-                  className="animate-spin"
-                />
+                <FiRefreshCw size={21} className="animate-spin" />
               </div>
 
               <div className="text-center">
@@ -185,11 +137,7 @@ const StaffDashboard = () => {
   }
 
   const summary = dashboard?.summary || {};
-
-  const requests =
-    dashboard?.recentRequests || [];
-
-
+  const requests = dashboard?.recentRequests || [];
 
   const stats = [
     {
@@ -199,7 +147,6 @@ const StaffDashboard = () => {
       icon: FiBriefcase,
       iconClass: "bg-brand-soft text-brand",
     },
-
     {
       title: "In Progress",
       value: summary.inProgress || 0,
@@ -207,7 +154,6 @@ const StaffDashboard = () => {
       icon: FiActivity,
       iconClass: "bg-warning-light text-warning-dark",
     },
-
     {
       title: "Completed",
       value: summary.completed || 0,
@@ -215,12 +161,9 @@ const StaffDashboard = () => {
       icon: FiCheckCircle,
       iconClass: "bg-success-light text-success-dark",
     },
-
     {
       title: "Avg. Completion",
-      value: formatDuration(
-        summary.averageCompletionTimeMs
-      ),
+      value: formatDuration(summary.averageCompletionTimeMs),
       description: "Average time to complete",
       icon: FiClock,
       iconClass: "bg-info-light text-info",
@@ -230,21 +173,16 @@ const StaffDashboard = () => {
   return (
     <main className="min-h-[calc(100vh-72px)] rounded-admin bg-gradient-to-b from-brand-light via-accent-soft to-accent px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
-
-
-
         <motion.div
           variants={fadeLeft}
           initial="hidden"
           whileInView="visible"
           viewport={{
             once: false,
-            amount: 0.2
+            amount: 0.2,
           }}
-
           className="relative mb-6 overflow-hidden rounded-admin-xl border border-border bg-surface p-6 shadow-admin-sm"
         >
-
           <div className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-brand-soft/70 blur-3xl" />
 
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -259,9 +197,8 @@ const StaffDashboard = () => {
               </h1>
 
               <p className="mt-2 max-w-xl text-sm leading-6 text-text-secondary">
-                Track your assigned service requests,
-                current workload, and completion
-                performance from one place.
+                Track your assigned service requests, current workload, and
+                completion performance from one place.
               </p>
             </div>
 
@@ -273,21 +210,13 @@ const StaffDashboard = () => {
             >
               <FiRefreshCw
                 size={16}
-                className={
-                  refreshing
-                    ? "animate-spin"
-                    : ""
-                }
+                className={refreshing ? "animate-spin" : ""}
               />
 
-              {refreshing
-                ? "Refreshing..."
-                : "Refresh"}
+              {refreshing ? "Refreshing..." : "Refresh"}
             </button>
           </div>
         </motion.div>
-
-
 
         <motion.div
           variants={fadeUp}
@@ -295,11 +224,11 @@ const StaffDashboard = () => {
           whileInView="visible"
           viewport={{
             once: false,
-            amount: 0.2
+            amount: 0.2,
           }}
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
         >
-          {stats.map((stat, index) => {
+          {stats.map((stat) => {
             const Icon = stat.icon;
 
             return (
@@ -341,25 +270,20 @@ const StaffDashboard = () => {
           })}
         </motion.div>
 
-
-
         <motion.section
           variants={fadeRight}
           initial="hidden"
           whileInView="visible"
           viewport={{
             once: false,
-            amount: 0.2
+            amount: 0.2,
           }}
           className="mt-6"
         >
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <FiLayers
-                  size={19}
-                  className="text-brand"
-                />
+                <FiLayers size={19} className="text-brand" />
 
                 <h2 className="text-lg font-bold text-brand">
                   Recent Service Requests
@@ -373,16 +297,13 @@ const StaffDashboard = () => {
 
             <button
               type="button"
-              onClick={() =>
-                router.push("/staff/requests/all")
-              }
-              className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-brand transition hover:text-brand-dark cursor-pointer"
+              onClick={() => router.push("/staff/requests/all")}
+              className="inline-flex w-fit cursor-pointer items-center gap-1.5 text-sm font-semibold text-brand transition hover:text-brand-dark"
             >
               View all
               <FiArrowRight size={15} />
             </button>
           </div>
-
 
           {requests.length === 0 ? (
             <div className="flex min-h-[280px] flex-col items-center justify-center rounded-admin-xl border border-border bg-surface px-6 text-center shadow-admin-sm">
@@ -395,8 +316,7 @@ const StaffDashboard = () => {
               </h3>
 
               <p className="mt-1 max-w-md text-sm text-text-muted">
-                You don't have any assigned service
-                requests at the moment.
+                You don't have any assigned service requests at the moment.
               </p>
             </div>
           ) : (
@@ -405,21 +325,13 @@ const StaffDashboard = () => {
                 const status = getStatusStyle(request.status);
                 const priority = getPriorityStyle(request.priority);
 
-
-                const isAssigned =
-                  request.status === "assigned";
-
-                const isAccepting =
-                  acceptingId === request._id;
+                const isAssigned = request.status === "assigned";
+                const isAccepting = acceptingId === request._id;
 
                 return (
                   <motion.article
                     key={request._id}
-                    variants={
-                      index % 2 === 0
-                        ? fadeLeft
-                        : fadeRight
-                    }
+                    variants={index % 2 === 0 ? fadeLeft : fadeRight}
                     initial="hidden"
                     animate="visible"
                     transition={{
@@ -433,19 +345,14 @@ const StaffDashboard = () => {
                     }}
                     className="group rounded-admin-xl border border-border bg-surface p-5 shadow-admin-sm transition-shadow duration-200 hover:shadow-admin"
                   >
-                    {/* Top */}
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
                         <div className="mb-2 flex flex-wrap items-center gap-2">
-                          {/* Category */}
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-semibold text-brand">
                             <FiLayers size={11} />
-
-                            {request.category?.name ||
-                              "Uncategorized"}
+                            {request.category?.name || "Uncategorized"}
                           </span>
 
-                          {/* Priority */}
                           <span
                             className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${priority.className}`}
                           >
@@ -458,28 +365,20 @@ const StaffDashboard = () => {
                         </h3>
                       </div>
 
-                      {/* Status */}
                       <span
                         className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${status.className}`}
                       >
-                        {request.status ===
-                          "completed" && (
-                            <FiCheckCircle
-                              size={11}
-                            />
-                          )}
+                        {request.status === "completed" && (
+                          <FiCheckCircle size={11} />
+                        )}
 
-                        {request.status ===
-                          "in_progress" && (
-                            <FiActivity size={11} />
-                          )}
+                        {request.status === "in_progress" && (
+                          <FiActivity size={11} />
+                        )}
 
-                        {request.status ===
-                          "assigned" && (
-                            <FiAlertCircle
-                              size={11}
-                            />
-                          )}
+                        {request.status === "assigned" && (
+                          <FiAlertCircle size={11} />
+                        )}
 
                         {status.label}
                       </span>
@@ -497,56 +396,38 @@ const StaffDashboard = () => {
                         />
 
                         <span>
-                          Assigned{" "}
-                          {formatDate(
-                            request.assignedAt
-                          )}
+                          Assigned {formatDate(request.assignedAt)}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 text-xs text-text-muted">
-                        <FiClock
-                          size={14}
-                          className="shrink-0 text-brand"
-                        />
+                        <FiClock size={14} className="shrink-0 text-brand" />
 
                         <span>
                           {request.startedAt
-                            ? `Started ${formatDate(
-                              request.startedAt
-                            )}`
+                            ? `Started ${formatDate(request.startedAt)}`
                             : "Not started yet"}
                         </span>
                       </div>
                     </div>
 
-                   
                     {request.completedAt && (
                       <div className="mt-3 flex items-center gap-2 text-xs font-medium text-success">
                         <FiCheckCircle size={14} />
 
                         <span>
-                          Completed{" "}
-                          {formatDate(
-                            request.completedAt
-                          )}
+                          Completed {formatDate(request.completedAt)}
                         </span>
                       </div>
                     )}
 
-                    
                     <div className="mt-4 flex flex-wrap items-center gap-2">
-                      {/* Accept only assigned */}
                       {isAssigned && (
                         <button
                           type="button"
-                          onClick={() =>
-                            handleAccept(
-                              request._id
-                            )
-                          }
+                          onClick={() => handleAccept(request._id)}
                           disabled={isAccepting}
-                          className="inline-flex items-center justify-center gap-2 rounded-admin bg-success px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:bg-success-dark hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-admin bg-success px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-all duration-200 hover:bg-success-dark hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {isAccepting ? (
                             <FiRefreshCw
@@ -557,20 +438,14 @@ const StaffDashboard = () => {
                             <FiCheck size={14} />
                           )}
 
-                          {isAccepting
-                            ? "Accepting..."
-                            : "Accept"}
+                          {isAccepting ? "Accepting..." : "Accept"}
                         </button>
                       )}
 
                       <button
                         type="button"
-                        onClick={() =>
-                          handleView(
-                            request._id
-                          )
-                        }
-                        className="inline-flex items-center justify-center gap-2 rounded-admin border border-border bg-surface px-4 py-2.5 text-xs font-semibold text-brand transition-all duration-200 hover:border-brand hover:bg-brand-soft cursor-pointer"
+                        onClick={() => handleView(request._id)}
+                        className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-admin border border-border bg-surface px-4 py-2.5 text-xs font-semibold text-brand transition-all duration-200 hover:border-brand hover:bg-brand-soft"
                       >
                         <FiEye size={14} />
                         View

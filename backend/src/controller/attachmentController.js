@@ -34,7 +34,7 @@ export const downloadAttachment = async (req,res) => {
     const { attachmentId } = req.params;
 
     const { attachment, filePath } = await getAttachmentFilePath(attachmentId);
-    // console.log("attachmentId:",attachmentId,filePath)
+  
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
@@ -61,7 +61,7 @@ export const downloadAttachment = async (req,res) => {
     );
   } catch (error) {
 
-    console.log("downloadAttachment error:",error);
+    console.log("error:",error);
 
     return errorResponse(res,{statusCode:500,message:"server Err",errors:error.message})
   }

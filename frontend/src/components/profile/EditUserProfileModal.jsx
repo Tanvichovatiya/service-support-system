@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FaTimes, FaUser } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 import { InputField } from "@/components/ui/InputField";
 import FileInput from "@/components/ui/FileInput";
@@ -21,7 +22,9 @@ import {
 const EditUserProfileModal = () => {
   const dispatch = useDispatch();
 
-  const { profile, updateLoading } = useSelector((state) => state.profile);
+  const { profile, updateLoading } = useSelector(
+    (state) => state.profile
+  );
 
   const [formData, setFormData] = useState({
     firstname: "",
@@ -33,13 +36,18 @@ const EditUserProfileModal = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (!profile) return;
+    if (!profile) {
+      return;
+    }
 
     setFormData({
       firstname: profile.firstname || "",
       lastname: profile.lastname || "",
       gender: profile.gender || "",
     });
+
+    setProfileFile(null);
+    setErrors({});
   }, [profile]);
 
   const handleChange = (e) => {
@@ -53,22 +61,28 @@ const EditUserProfileModal = () => {
     setErrors((prev) => ({
       ...prev,
       [name]: "",
+      submit: "",
     }));
   };
 
   const validate = () => {
     const newErrors = {};
 
-    if (!formData.firstname.trim()) {
+    const firstname = formData.firstname.trim();
+    const lastname = formData.lastname.trim();
+
+    if (!firstname) {
       newErrors.firstname = "First name is required";
-    } else if (formData.firstname.trim().length < 2) {
-      newErrors.firstname = "First name must be at least 2 characters";
+    } else if (firstname.length < 2) {
+      newErrors.firstname =
+        "First name must be at least 2 characters";
     }
 
-    if (!formData.lastname.trim()) {
+    if (!lastname) {
       newErrors.lastname = "Last name is required";
-    } else if (formData.lastname.trim().length < 2) {
-      newErrors.lastname = "Last name must be at least 2 characters";
+    } else if (lastname.length < 2) {
+      newErrors.lastname =
+        "Last name must be at least 2 characters";
     }
 
     if (!formData.gender) {
@@ -83,7 +97,9 @@ const EditUserProfileModal = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validate()) return;
+    if (!validate()) {
+      return;
+    }
 
     try {
       dispatch(setUpdateLoading(true));
@@ -111,12 +127,16 @@ const EditUserProfileModal = () => {
         })
       );
 
+      toast.success("Profile updated successfully");
+
       dispatch(closeEditProfileModal());
     } catch (error) {
       console.error("Update profile error:", error);
 
       setErrors({
-        submit: error?.response?.data?.message || "Failed to update profile",
+        submit:
+          error?.response?.data?.message ||
+          "Failed to update profile",
       });
     } finally {
       dispatch(setUpdateLoading(false));
@@ -124,24 +144,45 @@ const EditUserProfileModal = () => {
   };
 
   const handleClose = () => {
-    if (updateLoading) return;
+    if (updateLoading) {
+      return;
+    }
 
-    setErrors({});
+    setFormData({
+      firstname: profile?.firstname || "",
+      lastname: profile?.lastname || "",
+      gender: profile?.gender || "",
+    });
+
     setProfileFile(null);
+    setErrors({});
 
     dispatch(closeEditProfileModal());
   };
 
-  if (!profile) return null;
+  if (!profile) {
+    return null;
+  }
+
+  const profilePreview = profileFile
+    ? URL.createObjectURL(profileFile)
+    : profile.profilePic;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4" onMouseDown={handleClose}>
-      <div className="w-full max-w-xl overflow-hidden rounded-admin-xl border border-border bg-modal-background shadow-admin-lg" onMouseDown={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
+      onMouseDown={handleClose}
+    >
+      <div
+        className="w-full max-w-xl overflow-hidden rounded-admin-xl border border-border bg-modal-background shadow-admin-lg"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between border-b border-border-light px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-text-primary">
               Edit Profile
             </h2>
+
             <p className="mt-0.5 text-xs text-text-secondary">
               Update your personal information
             </p>
@@ -151,24 +192,21 @@ const EditUserProfileModal = () => {
             type="button"
             onClick={handleClose}
             disabled={updateLoading}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-soft hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-soft hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             <FaTimes size={17} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 p-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5 p-6"
+        >
           <div className="flex flex-col items-center">
             <div className="mb-4 h-24 w-24 overflow-hidden rounded-full border-4 border-brand-soft bg-surface-soft">
-              {profileFile ? (
+              {profilePreview ? (
                 <img
-                  src={URL.createObjectURL(profileFile)}
-                  alt="New profile"
-                  className="h-full w-full object-cover"
-                />
-              ) : profile.profilePic ? (
-                <img
-                  src={profile.profilePic}
+                  src={profilePreview}
                   alt="Profile"
                   className="h-full w-full object-cover"
                 />
@@ -229,16 +267,27 @@ const EditUserProfileModal = () => {
             error={errors.gender}
             disabled={updateLoading}
             options={[
-              { value: "male", label: "Male" },
-              { value: "female", label: "Female" },
-              { value: "other", label: "Other" },
+              {
+                value: "male",
+                label: "Male",
+              },
+              {
+                value: "female",
+                label: "Female",
+              },
+              {
+                value: "other",
+                label: "Other",
+              },
             ]}
             placeholder="Select gender"
           />
 
           {errors.submit && (
             <div className="rounded-lg border border-danger/20 bg-danger-light px-4 py-3">
-              <p className="text-sm text-danger">{errors.submit}</p>
+              <p className="text-sm text-danger">
+                {errors.submit}
+              </p>
             </div>
           )}
 

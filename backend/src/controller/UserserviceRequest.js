@@ -249,186 +249,6 @@ export const getMyRequestById = async (req, res) => {
     const userId = req.user.id;
     const { reqid } = req.params;
 
-    // const pipeline = [
-    //   {
-    //     $match: {
-    //       _id: toObjectId(reqid),
-    //       userId: toObjectId(userId),
-    //       isDeleted: false,
-    //     },
-    //   },
-
-    //   {
-    //     $lookup: {
-    //       from: "categories",
-    //       let: {
-    //         categoryId: "$categoryId",
-    //       },
-    //       pipeline: [
-    //         {
-    //           $match: {
-    //             $expr: {
-    //               $eq: ["$_id", "$$categoryId"],
-    //             },
-    //           },
-    //         },
-    //         {
-    //           $project: {
-    //             _id: 1,
-    //             name: 1,
-    //             description: 1,
-    //             isActive: 1,
-    //           },
-    //         },
-    //       ],
-    //       as: "category",
-    //     },
-    //   },
-
-    //   {
-    //     $unwind: {
-    //       path: "$category",
-    //       preserveNullAndEmptyArrays: true,
-    //     },
-    //   },
-
-    //   {
-    //     $lookup: {
-    //       from: "staffs",
-    //       let: {
-    //         assignedStaffIds: "$assignedStaffIds",
-    //       },
-    //       pipeline: [
-    //         {
-    //           $match: {
-    //             $expr: {
-    //               $in: [
-    //                 "$_id",
-    //                 {
-    //                   $ifNull: ["$$assignedStaffIds", []],
-    //                 },
-    //               ],
-    //             },
-    //           },
-    //         },
-
-    //         {
-    //           $lookup: {
-    //             from: "users",
-    //             let: {
-    //               staffUserId: "$userId",
-    //             },
-    //             pipeline: [
-    //               {
-    //                 $match: {
-    //                   $expr: {
-    //                     $eq: ["$_id", "$$staffUserId"],
-    //                   },
-    //                 },
-    //               },
-    //               {
-    //                 $project: {
-    //                   _id: 1,
-    //                   firstname: 1,
-    //                   lastname: 1,
-    //                   profilePic: 1,
-    //                 },
-    //               },
-    //             ],
-    //             as: "user",
-    //           },
-    //         },
-
-    //         {
-    //           $unwind: {
-    //             path: "$user",
-    //             preserveNullAndEmptyArrays: true,
-    //           },
-    //         },
-
-    //         {
-    //           $project: {
-    //             _id: 1,
-    //             employeeId: 1,
-    //             department: 1,
-    //             skills: 1,
-    //             user: 1,
-    //           },
-    //         },
-    //       ],
-    //       as: "assignedStaff",
-    //     },
-    //   },
-
-    //   {
-    //     $lookup: {
-    //       from: "attachments",
-    //       let: {
-    //         requestId: "$_id",
-    //       },
-    //       pipeline: [
-    //         {
-    //           $match: {
-    //             $expr: {
-    //               $eq: ["$requestId", "$$requestId"],
-    //             },
-    //           },
-    //         },
-
-    //         {
-    //           $project: {
-    //             _id: 1,
-    //             originalName: 1,
-    //             fileName: 1,
-    //             filePath: 1,
-    //             mimeType: 1,
-    //             size: 1,
-    //             createdAt: 1,
-    //           },
-    //         },
-
-    //         {
-    //           $sort: {
-    //             createdAt: 1,
-    //           },
-    //         },
-    //       ],
-    //       as: "attachments",
-    //     },
-    //   },
-
-    //   {
-    //     $project: {
-    //       _id: 1,
-    //       userId: 1,
-
-    //       title: 1,
-    //       description: 1,
-
-    //       categoryId: 1,
-    //       category: 1,
-
-    //       priority: 1,
-    //       status: 1,
-
-    //       // assignedStaffIds: 1,
-    //       // acceptedStaffIds: 1,
-    //       assignedStaff: 1,
-
-    //       attachments: 1,
-
-    //       isOverdue: 1,
-    //       overdueAt: 1,
-
-    //       assignedAt: 1,
-    //       startedAt: 1,
-    //       completedAt: 1,
-
-    //       createdAt: 1,
-    //       updatedAt: 1,
-    //     },
-    //   },
-    // ];
     const pipeline = [
       {
         $match: {
@@ -472,7 +292,7 @@ export const getMyRequestById = async (req, res) => {
         },
       },
 
-      // Assigned Staff
+    
       {
         $lookup: {
           from: "staffs",
@@ -641,16 +461,13 @@ export const getMyRequestById = async (req, res) => {
           title: 1,
           description: 1,
 
-          // categoryId: 1,
           category: 1,
 
           priority: 1,
           status: 1,
 
-          // assignedStaffIds: 1,
           assignedStaff: 1,
 
-          // acceptedStaffIds: 1,
           acceptedStaff: 1,
 
           attachments: 1,
@@ -677,7 +494,7 @@ export const getMyRequestById = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("getMyRequestById error:", error);
+    console.log(" error:", error);
 
     return errorResponse(res, {
       statusCode: 500,
@@ -801,11 +618,7 @@ export const getAllReqofStaff = async (req, res) => {
                 description: 1,
                 priority: 1,
                 status: 1,
-                // assignedAt: 1,
-                // startedAt: 1,
-                // completedAt: 1,
-                // createdAt: 1,
-                // updatedAt: 1,
+
 
                 user: {
                   _id: "$user._id",
@@ -848,7 +661,7 @@ export const getAllReqofStaff = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("getAllReqofStaff error:", error);
+    console.log(" error:", error);
 
     return errorResponse(res, {
       statusCode: 500,
@@ -866,108 +679,6 @@ export const getAssignedRequestById = async (req, res) => {
     const staff = await staffServices.getdatabyfindOne({
       userId,
     });
-
-    // const pipeline = [
-    //   {
-    //     $match: {
-    //       _id: toObjectId(reqid),
-    //       assignedStaffIds: toObjectId(staff._id),
-    //     },
-    //   },
-
-    //   {
-    //     $lookup: {
-    //       from: "users",
-    //       localField: "userId",
-    //       foreignField: "_id",
-    //       pipeline: [
-    //         {
-    //           $project: {
-    //             _id: 1,
-    //             firstname: 1,
-    //             lastname: 1,
-    //             profilePic: 1,
-    //           },
-    //         },
-    //       ],
-    //       as: "user",
-    //     },
-    //   },
-
-    //   {
-    //     $unwind: {
-    //       path: "$user",
-    //       preserveNullAndEmptyArrays: true,
-    //     },
-    //   },
-
-    //   {
-    //     $lookup: {
-    //       from: "categories",
-    //       localField: "categoryId",
-    //       foreignField: "_id",
-    //       pipeline: [
-    //         {
-    //           $project: {
-    //             _id: 1,
-    //             name: 1,
-    //             description: 1,
-    //             isActive: 1,
-    //           },
-    //         },
-    //       ],
-    //       as: "category",
-    //     },
-    //   },
-
-    //   {
-    //     $unwind: {
-    //       path: "$category",
-    //       preserveNullAndEmptyArrays: true,
-    //     },
-    //   },
-
-    //   {
-    //     $lookup: {
-    //       from: "attachments",
-    //       localField: "attachments",
-    //       foreignField: "_id",
-    //       pipeline: [
-    //         {
-    //           $project: {
-    //             _id: 1,
-    //             originalName: 1,
-    //             fileName: 1,
-    //             filePath: 1,
-    //             mimeType: 1,
-    //             size: 1,
-    //             createdAt: 1,
-    //             updatedAt: 1,
-    //           },
-    //         },
-    //       ],
-    //       as: "attachments",
-    //     },
-    //   },
-
-    //   {
-    //     $project: {
-    //       _id: 1,
-    //       title: 1,
-    //       description: 1,
-    //       priority: 1,
-    //       status: 1,
-    //       createdAt: 1,
-    //       updatedAt: 1,
-    //       assignedAt: 1,
-    //       startedAt: 1,
-    //       completedAt: 1,
-    //       user: 1,
-    //       category: 1,
-    //       attachments: 1,
-    //     },
-    //   },
-    // ];
 
     const pipeline = [
       {

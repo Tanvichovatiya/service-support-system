@@ -1,6 +1,5 @@
 import notificationServices from "../services/notificationServices.js";
 
-import mongoose from "mongoose";
 import { errorResponse, successResponse } from "../utils/apiResponse.js";
 import { redisKeys } from "../utils/redisKey.js";
 import redisServices from "../services/redis/redisServices.js";
@@ -110,15 +109,13 @@ export const getUnreadNotificationCount = async (req, res) => {
     const redisKey = redisKeys.notification.unreadCount(userId);
 
     let unreadCount = await redisServices.get(redisKey);
-    console.log("redis unreadCount:",unreadCount)
-
+  
     if (unreadCount === null) {
       unreadCount = await notificationServices.countUnread(userId);
 
       await redisServices.set(redisKey, unreadCount);
     }
-     console.log("unreadCount:",unreadCount)
-   
+    
     return successResponse(res, {
       statusCode: 200,
       message: "Unread count fetched successfully",

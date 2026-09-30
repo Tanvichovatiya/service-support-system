@@ -2,12 +2,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  FaTimes,
-  FaUser,
-  FaBuilding,
-  FaTools,
-} from "react-icons/fa";
+import { FaTimes, FaUser, FaTools } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 import { InputField } from "@/components/ui/InputField";
 import FileInput from "@/components/ui/FileInput";
@@ -16,11 +12,8 @@ import { Button } from "@/components/ui/Button";
 
 import { editStaffProfile } from "@/axiosApi/userApi";
 
-const EditStaffProfileModal = ({
-  profile,
-  onClose,
-  onSuccess,
-}) => {
+const EditStaffProfileModal = ({profile,onClose,onSuccess}) => {
+  
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -34,7 +27,9 @@ const EditStaffProfileModal = ({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!profile) return;
+    if (!profile) {
+      return;
+    }
 
     setFormData({
       firstname: profile.firstname || "",
@@ -47,8 +42,8 @@ const EditStaffProfileModal = ({
     });
   }, [profile]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
     setFormData((prev) => ({
       ...prev,
@@ -56,29 +51,31 @@ const EditStaffProfileModal = ({
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
 
-    if (!formData.firstname.trim()) {
+    const firstname = formData.firstname.trim();
+    const lastname = formData.lastname.trim();
+
+    if (!firstname) {
       setError("First name is required");
       return;
     }
 
-    if (!formData.lastname.trim()) {
-      setError("Last name is required");
-      return;
-    }
-
-    setLoading(true);
 
     try {
+      setLoading(true);
+
       const data = new FormData();
 
-      data.append("firstname", formData.firstname.trim());
-      data.append("lastname", formData.lastname.trim());
+      data.append("firstname", firstname);
+      data.append("lastname", lastname);
       data.append("gender", formData.gender);
-      data.append("department", formData.department.trim());
+      data.append(
+        "department",
+        formData.department.trim()
+      );
 
       const skills = formData.skills
         .split(",")
@@ -95,13 +92,18 @@ const EditStaffProfileModal = ({
 
       await editStaffProfile(data);
 
+      toast.success("Profile updated successfully");
+
       await onSuccess();
       onClose();
-    } catch (err) {
-      console.error("Update staff profile error:", err);
+    } catch (error) {
+      console.error(
+        "Update staff profile error:",
+        error
+      );
 
       setError(
-        err?.response?.data?.message ||
+        error?.response?.data?.message ||
           "Failed to update profile"
       );
     } finally {
@@ -109,13 +111,14 @@ const EditStaffProfileModal = ({
     }
   };
 
-  if (!profile) return null;
+  if (!profile) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-6">
       <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-admin-xl bg-modal-background shadow-admin-lg">
-        {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface px-6 py-4">
+        <div className="flex items-center justify-between border-b border-border bg-surface px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-text-primary">
               Edit Profile
@@ -130,13 +133,13 @@ const EditStaffProfileModal = ({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-soft hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Close edit profile"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-soft hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             <FaTimes />
           </button>
         </div>
 
-        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="overflow-y-auto p-6"
@@ -147,7 +150,6 @@ const EditStaffProfileModal = ({
             </div>
           )}
 
-          {/* Profile Picture */}
           <section>
             <h3 className="mb-3 text-sm font-semibold text-text-primary">
               Profile Picture
@@ -164,7 +166,6 @@ const EditStaffProfileModal = ({
             />
           </section>
 
-          {/* Personal Information */}
           <section className="mt-6">
             <h3 className="mb-4 text-sm font-semibold text-text-primary">
               Personal Information
@@ -223,44 +224,29 @@ const EditStaffProfileModal = ({
             </div>
           </section>
 
-          {/* Staff Information */}
           <section className="mt-6">
             <h3 className="mb-4 text-sm font-semibold text-text-primary">
               Staff Information
             </h3>
 
-            <div className="space-y-4">
+            <div>
               <InputField
-                label="Department"
-                id="department"
-                name="department"
-                value={formData.department}
-                placeholder="Enter department"
+                label="Skills"
+                id="skills"
+                name="skills"
+                value={formData.skills}
+                placeholder="React, Node.js, MongoDB"
                 onChange={handleChange}
-                leftIcon={FaBuilding}
+                leftIcon={FaTools}
                 disabled={loading}
               />
 
-              <div>
-                <InputField
-                  label="Skills"
-                  id="skills"
-                  name="skills"
-                  value={formData.skills}
-                  placeholder="React, Node.js, MongoDB"
-                  onChange={handleChange}
-                  leftIcon={FaTools}
-                  disabled={loading}
-                />
-
-                <p className="mt-1.5 text-xs text-text-muted">
-                  Separate multiple skills with commas.
-                </p>
-              </div>
+              <p className="mt-1.5 text-xs text-text-muted">
+                Separate multiple skills with commas.
+              </p>
             </div>
           </section>
 
-          {/* Actions */}
           <div className="mt-6 flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-end">
             <Button
               type="button"
@@ -286,4 +272,3 @@ const EditStaffProfileModal = ({
 };
 
 export default EditStaffProfileModal;
-

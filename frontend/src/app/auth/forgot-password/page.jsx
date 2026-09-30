@@ -4,7 +4,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { FiArrowLeft, FiArrowRight, FiHeadphones, FiMail } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiArrowRight,
+  FiMail,
+} from "react-icons/fi";
 
 import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/Button";
@@ -85,17 +89,14 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-r from-accent via-white to-accent-light px-4 py-8 ">
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-r from-accent via-white to-accent-light px-4 py-8">
       <div className="w-full max-w-md">
-      
-
         <motion.div
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="rounded-admin-lg border border-border border-[1.8px] border-brand bg-surface p-6 shadow-admin sm:p-8"
+          className="rounded-admin-lg border-[1.8px] border-brand bg-surface p-6 shadow-admin sm:p-8"
         >
-          {/* Header */}
           <div className="mb-7">
             <h1 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
               Forgot your password?
@@ -107,23 +108,19 @@ export default function ForgotPasswordPage() {
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-            {/* Error */}
             {error && (
               <div className="rounded-admin-sm border border-danger/20 bg-danger-light px-4 py-3 text-sm text-danger-dark">
                 {error}
               </div>
             )}
 
-            {/* Success */}
             {success && (
               <div className="rounded-admin-sm border border-success/20 bg-success-light px-4 py-3 text-sm text-success-dark">
                 {success}
               </div>
             )}
 
-            {/* Email */}
             <div className="relative">
               <FiMail className="pointer-events-none absolute left-3.5 top-[38px] z-10 h-5 w-5 text-text-muted" />
 
@@ -143,7 +140,6 @@ export default function ForgotPasswordPage() {
               />
             </div>
 
-            {/* Submit */}
             {!success && (
               <Button
                 type="submit"
@@ -164,7 +160,7 @@ export default function ForgotPasswordPage() {
             <button
               type="button"
               onClick={() => router.push("/auth/login")}
-              className="mx-auto flex items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-dark cursor-pointer"
+              className="mx-auto flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-dark"
             >
               <FiArrowLeft className="h-4 w-4" />
               Back to sign in

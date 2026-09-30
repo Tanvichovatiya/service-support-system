@@ -12,6 +12,7 @@ import { motion } from "motion/react";
 import { fadeRight } from "@/components/ui/Animation";
 import Image from "next/image";
 import logo from "@/assets/logo.png"
+
 export default function RegisterPage() {
 
 
@@ -40,15 +41,6 @@ export default function RegisterPage() {
                 priority
               />
 
-              {/* <div>
-                <p className="text-sm font-semibold text-white">
-                  Service Support
-                </p>
-
-                <p className="text-xs text-white/50">
-                  Management System
-                </p>
-              </div> */}
             </div>
           </div>
 
@@ -124,6 +116,7 @@ export default function RegisterPage() {
 
           <RegisterForm />
         </section>
+        
       </div>
     </main>
   );

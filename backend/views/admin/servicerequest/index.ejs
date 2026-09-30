@@ -840,46 +840,7 @@
         <%- include("viewComment") %>
         <%- include("createRequest") %>
         <%- include("reassignStaff") %>
-<!-- 
-           <script>
-  async function exportReport() {
-    const btn = document.getElementById("exportBtn");
-    const text = document.getElementById("exportText");
 
-    btn.disabled = true;
-    text.textContent = "Generating...";
-
-    try {
-      const response = await fetch(
-        "/admin/servicerequest/exportreport",{
-            method:"POST"
-        }
-      );
-
-
-      const blob = await response.blob();
-
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "service-request-report.xlsx";
-
-      document.body.appendChild(a);
-      a.click();
-
-      a.remove();
-      window.URL.revokeObjectURL(url);
-
-    } catch (error) {
-      console.error(error);
-      alert("Failed to export report");
-    } finally {
-      btn.disabled = false;
-      text.textContent = "Export Report";
-    }
-  }
-</script> -->
 
         <script src="/js/serviceReq.js"></script>
         <script src="/js/updateReqStatus.js"></script>
