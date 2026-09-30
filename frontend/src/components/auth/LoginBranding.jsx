@@ -1,10 +1,12 @@
+
 "use client";
 
-import { FiShield } from "react-icons/fi";
-import { motion } from "motion/react";
 import Image from "next/image";
-import { fadeRight } from "../ui/Animation";
+import { motion } from "motion/react";
+import { FiShield } from "react-icons/fi";
+
 import logo from "@/assets/logo.png";
+import { fadeRight } from "../ui/Animation";
 
 const LoginBranding = () => {
   return (
@@ -19,38 +21,21 @@ const LoginBranding = () => {
       className="relative hidden overflow-hidden bg-brand-deep lg:flex"
     >
       <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand/30" />
-
       <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-accent/15" />
 
       <div className="relative flex min-h-[680px] w-full flex-col justify-between p-12">
-
-        {/* Logo */}
-        <div className="flex items-center ">
-          {/* <div className="flex   items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20"> */}
-            <Image
-              src={logo}
-              alt="Service Support logo"
-              width={40}
-              height={40}
-              className=" w-40 h-18"
-              priority
-            />
-          {/* </div> */}
-
-          {/* <div>
-            <p className="text-sm font-semibold text-white">
-              Service Support
-            </p>
-
-            <p className="text-xs text-white/50">
-              Management System
-            </p>
-          </div> */}
+        <div className="flex items-center">
+          <Image
+            src={logo}
+            alt="Service Support logo"
+            width={160}
+            height={72}
+            className="h-18 w-40 object-contain"
+            priority
+          />
         </div>
 
-        {/* Main Content */}
         <div className="max-w-md">
-
           <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-light/15 ring-1 ring-brand-light/30">
             <FiShield className="h-8 w-8 text-brand-light" />
           </div>
@@ -58,16 +43,12 @@ const LoginBranding = () => {
           <h1 className="text-4xl font-bold leading-tight text-white">
             Manage support.
             <br />
-
-            <span className="text-brand-light">
-              Serve better.
-            </span>
+            <span className="text-brand-light">Serve better.</span>
           </h1>
 
           <p className="mt-6 max-w-sm text-base leading-7 text-white/65">
-            A centralized platform to manage service requests,
-            support users, assign staff, and deliver exceptional
-            service.
+            A centralized platform to manage service requests, support users,
+            assign staff, and deliver exceptional service.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -85,13 +66,11 @@ const LoginBranding = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between border-t border-white/10 pt-6">
+        <div className="border-t border-white/10 pt-6">
           <p className="text-xs text-white/40">
             Secure & reliable service support management
           </p>
         </div>
-
       </div>
     </motion.section>
   );

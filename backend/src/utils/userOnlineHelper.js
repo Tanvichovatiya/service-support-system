@@ -13,7 +13,6 @@ export const setUserOnline = async (userId) => {
       { new: true }
     );
 
-    // console.log(`User ${userId} is ONLINE`);
   } catch (error) {
     console.error("Set online error:", error);
   }
@@ -32,7 +31,6 @@ export const setUserOffline = async (userId) => {
       { new: true }
     );
 
-    // console.log(`User ${userId} is OFFLINE`);
   } catch (error) {
     console.error("Set offline error:", error);
   }

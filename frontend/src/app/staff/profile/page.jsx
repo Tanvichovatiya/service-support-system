@@ -19,6 +19,8 @@ import { getStaffProfile } from "@/axiosApi/userApi";
 import { Button } from "@/components/ui/Button";
 import ProfileItem from "@/components/profile/ProfileItem";
 import EditStaffProfileModal from "@/components/profile/EditStaffProfileModal";
+import {motion} from "motion/react"
+import { fadeLeft } from "@/components/ui/Animation";
 
 const StaffProfile = () => {
   const dispatch = useDispatch();
@@ -101,9 +103,15 @@ const StaffProfile = () => {
   return (
     <>
       <main className="min-h-screen bg-background">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+        <div  className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+            <motion.div variants={fadeLeft}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once: false,
+                  amount: 0.2
+                }}>
               <p className="text-sm font-medium text-brand">
                 Staff Account
               </p>
@@ -115,7 +123,7 @@ const StaffProfile = () => {
               <p className="mt-1 text-sm text-text-secondary">
                 View and manage your staff profile information.
               </p>
-            </div>
+            </motion.div>
 
             <Button
               type="button"
@@ -127,7 +135,13 @@ const StaffProfile = () => {
             </Button>
           </div>
 
-          <section className="overflow-hidden rounded-admin-xl border border-border bg-surface shadow-admin-sm">
+          <motion.section variants={fadeLeft}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once: false,
+                  amount: 0.2
+                }} className="overflow-hidden rounded-admin-xl border border-border bg-surface shadow-admin-sm">
             <div className="border-b border-border bg-surface-soft px-5 py-6 sm:px-8">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-4">
@@ -247,7 +261,7 @@ const StaffProfile = () => {
                 </section>
               </div>
             </div>
-          </section>
+          </motion.section>
         </div>
       </main>
 

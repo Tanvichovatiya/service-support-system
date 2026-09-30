@@ -1,22 +1,20 @@
 
 "use client";
 
-import { validatePassword } from "@/helperFunction/validatePassword";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { FaCheck } from "react-icons/fa";
 
+import { validatePassword } from "@/helperFunction/validatePassword";
 import {
-  setErrors,
-  setLoading,
   clearErrors,
   setError,
+  setErrors,
+  setLoading,
 } from "@/redux/slice/authSlice";
 
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
-
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-
-import { FaCheck } from "react-icons/fa";
 
 const PasswordForm = ({
   onSubmit,
@@ -25,16 +23,12 @@ const PasswordForm = ({
   submitDisabled = false,
 }) => {
   const dispatch = useDispatch();
-
-  const { loading, errors, error } = useSelector(
-    (state) => state.auth
-  );
+  const { loading, errors, error } = useSelector((state) => state.auth);
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     dispatch(clearErrors());
@@ -46,8 +40,8 @@ const PasswordForm = ({
     };
   }, [dispatch]);
 
-  const handlePasswordChange = (e) => {
-    const value = e.target.value;
+  const handlePasswordChange = (event) => {
+    const value = event.target.value;
 
     setPassword(value);
 
@@ -61,8 +55,8 @@ const PasswordForm = ({
     }
   };
 
-  const handleConfirmPasswordChange = (e) => {
-    const value = e.target.value;
+  const handleConfirmPasswordChange = (event) => {
+    const value = event.target.value;
 
     setConfirmPassword(value);
 
@@ -78,7 +72,6 @@ const PasswordForm = ({
 
   const validateForm = () => {
     const newErrors = {};
-
     const passwordError = validatePassword(password);
 
     if (passwordError) {
@@ -86,11 +79,9 @@ const PasswordForm = ({
     }
 
     if (!confirmPassword) {
-      newErrors.confirmPassword =
-        "Please confirm your password.";
+      newErrors.confirmPassword = "Please confirm your password.";
     } else if (password !== confirmPassword) {
-      newErrors.confirmPassword =
-        "Passwords do not match.";
+      newErrors.confirmPassword = "Passwords do not match.";
     }
 
     dispatch(setErrors(newErrors));
@@ -98,8 +89,8 @@ const PasswordForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
     if (loading || submitDisabled) {
       return;
@@ -108,36 +99,27 @@ const PasswordForm = ({
     dispatch(clearErrors());
     dispatch(setError(""));
 
-    const isValid = validateForm();
-
-    if (!isValid) {
+    if (!validateForm()) {
       return;
     }
 
     try {
       dispatch(setLoading(true));
-
       await onSubmit(password);
-
     } catch (error) {
       console.error("Password form error:", error);
 
       const responseData = error?.response?.data;
 
-      if (
-        responseData?.errors &&
-        Array.isArray(responseData.errors)
-      ) {
+      if (Array.isArray(responseData?.errors)) {
         const fieldErrors = {};
 
         responseData.errors.forEach((item) => {
-          Object.entries(item).forEach(
-            ([field, message]) => {
-              if (!fieldErrors[field]) {
-                fieldErrors[field] = message;
-              }
+          Object.entries(item).forEach(([field, message]) => {
+            if (!fieldErrors[field]) {
+              fieldErrors[field] = message;
             }
-          );
+          });
         });
 
         dispatch(setErrors(fieldErrors));
@@ -155,13 +137,11 @@ const PasswordForm = ({
     }
   };
 
+  const passwordsMatch =
+    confirmPassword.length > 0 && password === confirmPassword;
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-5"
-      noValidate
-    >
-      {/* General API error */}
+    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
       {error && (
         <p className="text-center text-sm text-danger">
           {error}
@@ -179,7 +159,7 @@ const PasswordForm = ({
         error={errors.password}
         showPassword={showPassword}
         togglePasswordVisibility={() =>
-          setShowPassword((prev) => !prev)
+          setShowPassword((previous) => !previous)
         }
         autoComplete="new-password"
         disabled={loading}
@@ -197,47 +177,32 @@ const PasswordForm = ({
         error={errors.confirmPassword}
         showPassword={showConfirmPassword}
         togglePasswordVisibility={() =>
-          setShowConfirmPassword((prev) => !prev)
+          setShowConfirmPassword((previous) => !previous)
         }
         autoComplete="new-password"
         disabled={loading}
         required
       />
 
-      {/* Password match indicator */}
       {confirmPassword && (
         <div
-          className={`
-            flex items-center gap-2
-            text-xs font-medium
-            ${
-              password === confirmPassword
-                ? "text-success"
-                : "text-danger"
-            }
-          `}
+          className={`flex items-center gap-2 text-xs font-medium ${
+            passwordsMatch ? "text-success" : "text-danger"
+          }`}
         >
           <span
-            className={`
-              flex h-5 w-5 items-center justify-center
-              rounded-full
-              ${
-                password === confirmPassword
-                  ? "bg-success/10"
-                  : "bg-danger/10"
-              }
-            `}
+            className={`flex h-5 w-5 items-center justify-center rounded-full ${
+              passwordsMatch ? "bg-success/10" : "bg-danger/10"
+            }`}
           >
-            {password === confirmPassword ? (
+            {passwordsMatch ? (
               <FaCheck size={10} />
             ) : (
-              <span className="text-[11px]">
-                !
-              </span>
+              <span className="text-[11px]">!</span>
             )}
           </span>
 
-          {password === confirmPassword
+          {passwordsMatch
             ? "Passwords match"
             : "Passwords do not match"}
         </div>

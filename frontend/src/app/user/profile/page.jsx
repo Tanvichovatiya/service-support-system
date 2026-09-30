@@ -22,6 +22,8 @@ import {
 import { Button } from "@/components/ui/Button";
 import ProfileItem from "@/components/profile/ProfileItem";
 import EditUserProfileModal from "@/components/profile/EditUserProfileModal";
+import {motion} from "motion/react"
+import { fadeLeft, fadeRight } from "@/components/ui/Animation";
 
 const ProfilePage = () => {
   const dispatch = useDispatch();
@@ -83,7 +85,13 @@ const ProfilePage = () => {
     <>
       <main className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-6">
+          <motion.div variants={fadeLeft}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once: false,
+                  amount: 0.2
+                }} className="mb-6">
             <h1 className="text-2xl font-semibold text-text-primary">
               My Profile
             </h1>
@@ -91,9 +99,15 @@ const ProfilePage = () => {
             <p className="mt-1 text-sm text-text-secondary">
               Manage your personal profile information
             </p>
-          </div>
+          </motion.div>
 
-          <section className="overflow-hidden rounded-admin-xl border border-border bg-surface shadow-admin">
+          <motion.section variants={fadeRight}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once: false,
+                  amount: 0.2
+                }} className="overflow-hidden rounded-admin-xl border border-border bg-surface shadow-admin">
             <div className="bg-brand px-6 py-8 sm:px-8">
               <div className="flex flex-col items-center gap-5 sm:flex-row">
                 <div className="h-28 w-28 shrink-0 overflow-hidden rounded-full border-4 border-white/30 bg-brand-light shadow-admin-md">
@@ -177,7 +191,7 @@ const ProfilePage = () => {
                 />
               </div>
             </div>
-          </section>
+          </motion.section>
         </div>
       </main>
 

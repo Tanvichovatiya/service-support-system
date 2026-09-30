@@ -150,49 +150,7 @@ const CategoryList = () => {
         </div>
       )}
 
-      {/* {!loading && !error && categories.length > 0 && (
-        <>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => (
-              <motion.article variants={fadeRight}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={{
-                        once: false,
-                        amount: 0.2
-                      }}
-                key={category._id}
-                className="group relative overflow-hidden rounded-admin-lg bg-accent-dark p-5 shadow-admin-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-admin"
-              >
-                <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/10 transition-transform duration-300 group-hover:scale-125" />
-
-                <div className="relative mb-5 flex h-11 w-11 items-center justify-center rounded-admin bg-white/15 text-white">
-                  <FiFolder size={20} />
-                </div>
-
-                <h3 className="relative text-base font-semibold text-white">
-                  {category.name}
-                </h3>
-
-                <p className="relative mt-2 line-clamp-3 text-sm leading-6 text-white/80">
-                  {category.description}
-                </p>
-              </motion.article>
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={page}
-              total={totalCategories}
-              limit={limit}
-              hasNextPage={hasNextPage}
-              hasPrevPage={hasPrevPage}
-              onPageChange={handlePageChange}
-            />
-          )}
-        </>
-      )} */}
+     
       {!loading && !error && categories.length > 0 && (
         <> <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category, index) => (

@@ -134,7 +134,7 @@ export default function RequestDetails({ request }) {
         </div>
       </section>
 
-      {/* Assigned Staff */}
+    
       <section className="rounded-2xl border-[2.1px] border-brand-light bg-surface p-5 shadow-admin-sm hover:shadow-admin-hover sm:p-6">
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-soft text-brand">
@@ -212,7 +212,6 @@ export default function RequestDetails({ request }) {
         )}
       </section>
 
-      {/* Accepted Staff */}
       <section className="rounded-2xl border-[2.1px] border-brand-light bg-surface p-5 shadow-admin-sm hover:shadow-admin-hover sm:p-6">
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-soft text-brand">
@@ -294,7 +293,6 @@ export default function RequestDetails({ request }) {
         )}
       </section>
 
-      {/* Attachments */}
       <section className="rounded-2xl border-[2.1px] border-brand-light bg-surface p-5 shadow-admin-sm hover:shadow-admin-hover sm:p-6">
         <div className="mb-5 flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-soft text-brand">

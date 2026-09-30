@@ -5,26 +5,21 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  FaUser,
-  FaEnvelope,
-  FaLock,
-  FaArrowRight,
-} from "react-icons/fa6";
-import { toast } from "react-toastify"
+import { FaArrowRight, FaEnvelope, FaLock, FaUser } from "react-icons/fa6";
+import { toast } from "react-toastify";
+import { motion } from "motion/react";
 
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
 import FileInput from "@/components/ui/FileInput";
 import Select from "@/components/ui/Select";
-import { motion } from "motion/react";
 
 import {
+  clearErrors,
+  setError,
   setErrors,
   setLoading,
   setShowPassword,
-  clearErrors,
-  setError,
   setVerificationEmail,
 } from "@/redux/slice/authSlice";
 
@@ -35,7 +30,6 @@ import { fadeUp } from "../ui/Animation";
 export const RegisterForm = () => {
   const dispatch = useDispatch();
   const router = useRouter();
-
 
   const { loading, errors, error, showPassword } = useSelector(
     (state) => state.auth
@@ -52,7 +46,7 @@ export const RegisterForm = () => {
 
   useEffect(() => {
     dispatch(clearErrors());
-    dispatch(setError(""))
+    dispatch(setError(""));
   }, [dispatch]);
 
   const handleChange = (e) => {
@@ -62,7 +56,6 @@ export const RegisterForm = () => {
       ...prev,
       [name]: value,
     }));
-
 
     if (errors[name]) {
       dispatch(
@@ -125,6 +118,7 @@ export const RegisterForm = () => {
 
     return Object.keys(newErrors).length === 0;
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -134,9 +128,7 @@ export const RegisterForm = () => {
 
     dispatch(clearErrors());
 
-    const isValid = validateForm();
-
-    if (!isValid) {
+    if (!validateForm()) {
       return;
     }
 
@@ -155,19 +147,17 @@ export const RegisterForm = () => {
         submitData.append("profilePic", formData.profilePic);
       }
 
-
       const response = await registerUser(submitData);
+
       toast.success(
         `${response?.message || "Registration successful."} OTP has been sent to your email!`
       );
+
       dispatch(setError(""));
-      console.log("response:", response)
       dispatch(setVerificationEmail(response.data.email));
 
       router.push("/auth/verify-email");
     } catch (error) {
-      console.log("register error:", error);
-
       const responseData = error?.response?.data;
 
       if (responseData?.errors && Array.isArray(responseData.errors)) {
@@ -186,8 +176,8 @@ export const RegisterForm = () => {
         dispatch(
           setError(
             responseData?.message ||
-            error?.message ||
-            "Failed to create account."
+              error?.message ||
+              "Failed to create account."
           )
         );
       }
@@ -203,14 +193,14 @@ export const RegisterForm = () => {
       whileInView="visible"
       viewport={{
         once: false,
-        amount: 0.2
+        amount: 0.2,
       }}
-      onSubmit={handleSubmit} className="space-y-5" noValidate>
-
+      onSubmit={handleSubmit}
+      className="space-y-5"
+      noValidate
+    >
       {error && (
-        <p className="text-sm text-red-500 text-center  mb-3">
-          {error}
-        </p>
+        <p className="mb-3 text-center text-sm text-red-500">{error}</p>
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -265,14 +255,8 @@ export const RegisterForm = () => {
           required
           error={errors.gender}
           options={[
-            {
-              value: "Male",
-              label: "Male",
-            },
-            {
-              value: "Female",
-              label: "Female",
-            },
+            { value: "Male", label: "Male" },
+            { value: "Female", label: "Female" },
           ]}
         />
       </div>
@@ -305,8 +289,6 @@ export const RegisterForm = () => {
         autoComplete="new-password"
         leftIcon={FaLock}
       />
-
-
 
       <Button
         type="submit"

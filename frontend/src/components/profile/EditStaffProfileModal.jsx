@@ -11,6 +11,8 @@ import Select from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 
 import { editStaffProfile } from "@/axiosApi/userApi";
+import {motion} from "motion/react"
+import { fadeRight } from "../ui/Animation";
 
 const EditStaffProfileModal = ({profile,onClose,onSuccess}) => {
   
@@ -116,7 +118,13 @@ const EditStaffProfileModal = ({profile,onClose,onSuccess}) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-6">
+    <motion.div variants={fadeRight}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once: false,
+                  amount: 0.2
+                }} className="fixed inset-0 z-50 flex items-center justify-center bg-overlay px-4 py-6">
       <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-admin-xl bg-modal-background shadow-admin-lg">
         <div className="flex items-center justify-between border-b border-border bg-surface px-6 py-4">
           <div>
@@ -267,7 +275,7 @@ const EditStaffProfileModal = ({profile,onClose,onSuccess}) => {
           </div>
         </form>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

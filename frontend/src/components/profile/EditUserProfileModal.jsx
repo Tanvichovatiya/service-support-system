@@ -12,12 +12,14 @@ import Select from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 
 import { editUserProfile } from "@/axiosApi/userApi";
+import {motion} from "motion/react"
 
 import {
   closeEditProfileModal,
   setUpdateLoading,
   updateProfile,
 } from "@/redux/slice/profileSlice";
+import { fadeLeft } from "../ui/Animation";
 
 const EditUserProfileModal = () => {
   const dispatch = useDispatch();
@@ -73,17 +75,11 @@ const EditUserProfileModal = () => {
 
     if (!firstname) {
       newErrors.firstname = "First name is required";
-    } else if (firstname.length < 2) {
-      newErrors.firstname =
-        "First name must be at least 2 characters";
     }
 
     if (!lastname) {
       newErrors.lastname = "Last name is required";
-    } else if (lastname.length < 2) {
-      newErrors.lastname =
-        "Last name must be at least 2 characters";
-    }
+    } 
 
     if (!formData.gender) {
       newErrors.gender = "Please select gender";
@@ -169,7 +165,13 @@ const EditUserProfileModal = () => {
     : profile.profilePic;
 
   return (
-    <div
+    <motion.div variants={fadeLeft}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once: false,
+                  amount: 0.2
+                }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
       onMouseDown={handleClose}
     >
@@ -312,7 +314,7 @@ const EditUserProfileModal = () => {
           </div>
         </form>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

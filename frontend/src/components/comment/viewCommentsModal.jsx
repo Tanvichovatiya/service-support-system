@@ -12,6 +12,7 @@ import {
 
 import { getComment } from "@/axiosApi/serviceRequestApi";
 import { downloadAttachment } from "@/axiosApi/attachmentApi";
+import { formatDate } from "@/helperFunction/formateDate";
 
 const ViewCommentsModal = ({
   isOpen,
@@ -50,18 +51,6 @@ const ViewCommentsModal = ({
   }, [isOpen, requestId, refreshKey]);
 
   if (!isOpen) return null;
-
-  const formatDate = (date) => {
-    if (!date) return "";
-
-    return new Date(date).toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const getUserName = (comment) => {
     const user = comment.user;

@@ -5,36 +5,32 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
+import { motion } from "motion/react";
 import {
-  FiMail,
-  FiLock,
   FiArrowRight,
   FiHeadphones,
+  FiLock,
+  FiMail,
 } from "react-icons/fi";
 
 import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/Button";
-import { motion } from "motion/react"
-
 import {
-  setErrors,
-  setShowPassword,
   clearErrors,
   setError,
-  setLoading,
-  setIsUser,
+  setErrors,
   setIsStaff,
+  setIsUser,
+  setLoading,
+  setShowPassword,
+  setUser,
 } from "@/redux/slice/authSlice";
-
+import { setUnreadMessages } from "@/redux/slice/chatSlice";
 import { validatePassword } from "@/helperFunction/validatePassword";
 import { loginUser } from "@/axiosApi/authApi";
+import { getUnReadMsg } from "@/axiosApi/msgApi";
 import { socket } from "@/socket/socket";
 import { fadeUp } from "../ui/Animation";
-import { setUser } from "@/redux/slice/authSlice";
-import { getUnReadMsg } from "@/axiosApi/msgApi";
-import { setUnreadMessages } from "@/redux/slice/chatSlice";
-import { getUnReadnotification } from "@/axiosApi/notificationApi";
 
 const LoginForm = ({
   title = "Sign in to your account",
@@ -44,14 +40,10 @@ const LoginForm = ({
 }) => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth)
 
-  const {
-    errors,
-    showPassword,
-    loading,
-    error,
-  } = useSelector((state) => state.auth);
+  const { errors, showPassword, loading, error } = useSelector(
+    (state) => state.auth
+  );
 
   const [formData, setFormData] = useState({
     email: "",
@@ -68,8 +60,8 @@ const LoginForm = ({
     };
   }, [dispatch]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
     setFormData((prev) => ({
       ...prev,
@@ -85,7 +77,6 @@ const LoginForm = ({
       );
     }
 
-
     if (error) {
       dispatch(setError(""));
     }
@@ -93,17 +84,13 @@ const LoginForm = ({
 
   const validateForm = () => {
     const newErrors = {};
-
     const email = formData.email.trim().toLowerCase();
     const password = formData.password;
 
     if (!email) {
       newErrors.email = "Email is required.";
-    } else if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-    ) {
-      newErrors.email =
-        "Please enter a valid email address.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Please enter a valid email address.";
     }
 
     if (!password) {
@@ -121,45 +108,42 @@ const LoginForm = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const loadUnreadMessages = async () => {
+    try {
+      const unreadMessages = await getUnReadMsg();
+      dispatch(setUnreadMessages(unreadMessages));
+    } catch (error) {
+      console.error("Failed to load unread messages:", error);
+    }
+  };
 
-    if (loading) {
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (loading || !validateForm()) {
       return;
     }
 
     dispatch(clearErrors());
     dispatch(setError(""));
-
-    const isValid = validateForm();
-
-    if (!isValid) {
-      return;
-    }
+    dispatch(setLoading(true));
 
     try {
-      dispatch(setLoading(true));
-
       const response = await loginUser({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
 
-      // console.log("Login response:", response);
-
       dispatch(clearErrors());
       dispatch(setError(""));
 
-      sessionStorage.setItem(
-        "token",
-        response.token
-      );
+      sessionStorage.setItem("token", response.token);
+
       const loggedInUser = response?.user;
 
       if (loggedInUser) {
         dispatch(setUser(loggedInUser));
       }
-
 
       socket.auth = {
         token: response.token,
@@ -168,61 +152,47 @@ const LoginForm = ({
       if (!socket.connected) {
         socket.connect();
       }
-      try {
-        const unreadData = await getUnReadMsg();
 
-        dispatch(setUnreadMessages(unreadData));
-      } catch (error) {
-        console.error(
-          "Failed to load unread messages:",
-          error
-        );
-      }
-
+      await loadUnreadMessages();
 
       const role = response?.user?.role;
 
       if (role === "user") {
+        dispatch(setIsUser(true));
         router.push("/user/home");
-        dispatch(setIsUser(true))
         return;
       }
 
       if (role === "staff") {
+        dispatch(setIsStaff(true));
         router.push("/staff/home");
-        dispatch(setIsStaff(true))
-        return;
       }
-
-
-
     } catch (error) {
       console.error("Login error:", error);
 
       const responseData = error?.response?.data;
 
-
-      if (responseData?.errors && Array.isArray(responseData.errors)) {
+      if (
+        responseData?.errors &&
+        Array.isArray(responseData.errors)
+      ) {
         const fieldErrors = {};
 
         responseData.errors.forEach((item) => {
-          Object.entries(item).forEach(
-            ([field, message]) => {
-              if (!fieldErrors[field]) {
-                fieldErrors[field] = message;
-              }
+          Object.entries(item).forEach(([field, message]) => {
+            if (!fieldErrors[field]) {
+              fieldErrors[field] = message;
             }
-          );
+          });
         });
 
         dispatch(setErrors(fieldErrors));
       } else {
-
         dispatch(
           setError(
             responseData?.message ||
-            error?.message ||
-            "Failed to login. Please try again."
+              error?.message ||
+              "Failed to login. Please try again."
           )
         );
       }
@@ -233,8 +203,6 @@ const LoginForm = ({
 
   return (
     <div className="w-full max-w-md">
-
-
       <div className="mb-10 flex items-center gap-3 lg:hidden">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand">
           <FiHeadphones className="h-6 w-6 text-white" />
@@ -261,38 +229,26 @@ const LoginForm = ({
         </p>
       </div>
 
-      <motion.form variants={fadeUp}
+      <motion.form
+        variants={fadeUp}
         initial="hidden"
         whileInView="visible"
         viewport={{
           once: false,
-          amount: 0.2
+          amount: 0.2,
         }}
         onSubmit={handleSubmit}
         className="space-y-5"
         noValidate
       >
-
         {error && (
           <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
           </p>
         )}
 
-
         <div className="relative">
-          <FiMail
-            className="
-              pointer-events-none
-              absolute
-              left-3.5
-              top-[38px]
-              z-10
-              h-5
-              w-5
-              text-text-muted
-            "
-          />
+          <FiMail className="pointer-events-none absolute left-3.5 top-[38px] z-10 h-5 w-5 text-text-muted" />
 
           <InputField
             label="Email address"
@@ -306,24 +262,12 @@ const LoginForm = ({
             required
             disabled={loading}
             autoComplete="email"
-            className="[&_input]:pl-11 "
+            className="[&_input]:pl-11"
           />
         </div>
 
-        {/* Password */}
         <div className="relative">
-          <FiLock
-            className="
-              pointer-events-none
-              absolute
-              left-3.5
-              top-[38px]
-              z-10
-              h-5
-              w-5
-              text-text-muted
-            "
-          />
+          <FiLock className="pointer-events-none absolute left-3.5 top-[38px] z-10 h-5 w-5 text-text-muted" />
 
           <InputField
             label="Password"
@@ -339,27 +283,23 @@ const LoginForm = ({
             autoComplete="current-password"
             showPassword={showPassword}
             togglePasswordVisibility={() =>
-              dispatch(
-                setShowPassword(!showPassword)
-              )
+              dispatch(setShowPassword(!showPassword))
             }
             className="[&_input]:pl-11"
           />
         </div>
-        <div className="flex justify-end -mt-2">
-          <div className="flex justify-end -mt-2">
-            <button
-              type="button"
-              onClick={() => router.push("/auth/forgot-password")}
-              disabled={loading}
-              className="text-sm font-semibold text-brand transition-colors hover:text-brand-dark disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-            >
-              Forgot password?
-            </button>
-          </div>
+
+        <div className="-mt-2 flex justify-end">
+          <button
+            type="button"
+            onClick={() => router.push("/auth/forgot-password")}
+            disabled={loading}
+            className="cursor-pointer text-sm font-semibold text-brand transition-colors hover:text-brand-dark disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Forgot password?
+          </button>
         </div>
 
-        {/* Submit */}
         <Button
           type="submit"
           loading={loading}
@@ -370,22 +310,12 @@ const LoginForm = ({
         >
           <span>Sign in</span>
 
-          <FiArrowRight
-            className="
-              ml-2
-              h-4
-              w-4
-              transition-transform
-              group-hover:translate-x-1
-            "
-          />
+          <FiArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </motion.form>
 
-
       {(accountMessage || accountAction) && (
         <div className="mt-8 border-t border-border pt-6 text-center">
-
           {accountMessage && (
             <p className="text-sm text-text-secondary">
               {accountMessage}
